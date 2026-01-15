@@ -7,6 +7,8 @@ function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortOrder, setSortOrder] = useState<'created' | 'lowStock'>('created')
   const [newName, setNewName] = useState('')
   const [newUrl, setNewUrl] = useState('')
   const [newCount, setNewCount] = useState(1)
@@ -22,6 +24,15 @@ function App() {
       saveItems(items)
     }
   }, [items])
+
+  const filteredItems = items
+    .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      if (sortOrder === 'lowStock') {
+        return a.count - b.count
+      }
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    })
 
   const updateCount = (id: string, delta: number) => {
     setItems(items.map(item => {
@@ -86,6 +97,25 @@ function App() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white p-4 shadow">
         <h1 className="text-xl font-bold">カイタス</h1>
+        <div className="mt-3">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="🔍 キーワード検索"
+            className="w-full p-2 border rounded-lg text-sm"
+          />
+        </div>
+        <div className="mt-3">
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as 'created' | 'lowStock')}
+            className="w-full p-2 border rounded-lg text-sm bg-white"
+          >
+            <option value="created">登録順</option>
+            <option value="lowStock">数が少ない順</option>
+          </select>
+        </div>
       </header>
 
       <main className="p-4 pb-20">
@@ -94,9 +124,13 @@ function App() {
             <p>商品がありません</p>
             <p className="text-sm mt-2">右下の + ボタンから追加してください</p>
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center text-gray-500 mt-10">
+            <p>「{searchQuery}」に一致する商品がありません</p>
+          </div>
         ) : (
           <div className="space-y-3">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <div key={item.id} onClick={() => setSelectedItem(item)} className="bg-white p-4 rounded-lg shadow flex justify-between items-center cursor-pointer">
                 <div className="flex-1 mr-4">
                   <p className="font-medium text-sm line-clamp-2">{item.name}</p>
