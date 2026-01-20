@@ -47,6 +47,7 @@ function App() {
   const [editName, setEditName] = useState('')
   const [editUrl, setEditUrl] = useState('')
   const [editCategory, setEditCategory] = useState('')
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
 
   useEffect(() => {
     setItems(loadItems())
@@ -300,6 +301,43 @@ function App() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      <footer className="bg-white border-t p-4 text-center">
+        <button onClick={() => setShowPrivacyPolicy(true)} className="text-gray-500 text-sm underline">
+          プライバシーポリシー
+        </button>
+      </footer>
+
+      {showPrivacyPolicy && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">プライバシーポリシー</h2>
+              <button onClick={() => setShowPrivacyPolicy(false)} className="text-2xl">×</button>
+            </div>
+            <div className="text-sm text-gray-700 space-y-4">
+              <p>本アプリ「カイタス」（以下「本アプリ」）は、以下のプライバシーポリシーに基づき、ユーザーの個人情報を取り扱います。</p>
+
+              <h3 className="font-bold mt-4">1. 収集する情報</h3>
+              <p>本アプリでは、ユーザーが登録した商品情報（商品名、在庫数、購入URL、カテゴリ）をお使いの端末（ブラウザのローカルストレージ）に保存します。これらの情報は外部サーバーには送信されません。</p>
+
+              <h3 className="font-bold mt-4">2. 広告について</h3>
+              <p>本アプリでは、第三者配信の広告サービス（Google AdSense、Amazonアソシエイト等）を利用する場合があります。これらのサービスでは、ユーザーの興味に応じた広告を表示するためにCookieを使用することがあります。</p>
+
+              <h3 className="font-bold mt-4">3. アクセス解析について</h3>
+              <p>本アプリでは、サービス向上のためにアクセス解析ツールを使用する場合があります。これらのツールでは、トラフィックデータの収集のためにCookieを使用しています。</p>
+
+              <h3 className="font-bold mt-4">4. 外部リンクについて</h3>
+              <p>本アプリからAmazon等の外部サイトへリンクする場合があります。リンク先のサイトにおける個人情報の取り扱いについては、各サイトのプライバシーポリシーをご確認ください。</p>
+
+              <h3 className="font-bold mt-4">5. お問い合わせ</h3>
+              <p>本ポリシーに関するお問い合わせは、アプリ内のお問い合わせ機能よりご連絡ください。</p>
+
+              <p className="text-gray-500 mt-4">制定日：2025年1月16日</p>
+            </div>
           </div>
         </div>
       )}
