@@ -2,6 +2,22 @@ import { useState, useEffect } from 'react'
 import type { StockItem } from './types'
 import { loadItems, saveItems } from './services/storage'
 
+const AFFILIATE_TAG = 'kokeshi20130e-22'
+
+const toAffiliateUrl = (url: string): string => {
+  if (!url) return ''
+  try {
+    const u = new URL(url)
+    if (u.hostname.includes('amazon.co.jp') || u.hostname.includes('amazon.com')) {
+      u.searchParams.set('tag', AFFILIATE_TAG)
+      return u.toString()
+    }
+  } catch {
+    return url
+  }
+  return url
+}
+
 const CATEGORIES = [
   'キッチン',
   '洗面所',
@@ -276,7 +292,7 @@ function App() {
                   <button onClick={() => updateCount(selectedItem.id, 1)} className="w-12 h-12 bg-gray-200 rounded-full text-xl font-bold">+</button>
                 </div>
                 {selectedItem.buyUrl && (
-                  <a href={selectedItem.buyUrl} target="_blank" rel="noopener noreferrer" className="w-full p-3 bg-gray-800 text-white rounded-lg font-bold text-center block mb-3">Amazonで買う</a>
+                  <a href={toAffiliateUrl(selectedItem.buyUrl)} target="_blank" rel="noopener noreferrer" className="w-full p-3 bg-gray-800 text-white rounded-lg font-bold text-center block mb-3">Amazonで買う</a>
                 )}
                 <div className="flex gap-3 w-full">
                   <button onClick={startEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">編集</button>
