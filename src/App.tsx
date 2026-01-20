@@ -48,6 +48,7 @@ function App() {
   const [editUrl, setEditUrl] = useState('')
   const [editCategory, setEditCategory] = useState('')
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
 
   useEffect(() => {
     setItems(loadItems())
@@ -306,10 +307,54 @@ function App() {
       )}
 
       <footer className="bg-white border-t p-4 text-center">
+        <button onClick={() => setShowTerms(true)} className="text-gray-500 text-sm underline">
+          利用規約
+        </button>
+        <span className="text-gray-300 mx-2">|</span>
         <button onClick={() => setShowPrivacyPolicy(true)} className="text-gray-500 text-sm underline">
           プライバシーポリシー
         </button>
       </footer>
+
+      {showTerms && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">利用規約</h2>
+              <button onClick={() => setShowTerms(false)} className="text-2xl">×</button>
+            </div>
+            <div className="text-sm text-gray-700 space-y-4">
+              <p>本利用規約（以下「本規約」）は、本アプリ「カイタス」（以下「本アプリ」）の利用条件を定めるものです。ユーザーの皆様には、本規約に同意いただいた上で、本アプリをご利用いただきます。</p>
+
+              <h3 className="font-bold mt-4">第1条（適用）</h3>
+              <p>本規約は、ユーザーと本アプリの利用に関わる一切の関係に適用されるものとします。</p>
+
+              <h3 className="font-bold mt-4">第2条（利用について）</h3>
+              <p>本アプリは、家庭用消耗品の在庫管理を目的としたサービスです。ユーザーは、本アプリを無料でご利用いただけます。</p>
+
+              <h3 className="font-bold mt-4">第3条（データの保存）</h3>
+              <p>本アプリで登録されたデータは、ユーザーのブラウザ内（ローカルストレージ）に保存されます。ブラウザのデータを削除した場合、登録したデータも削除されますのでご注意ください。</p>
+
+              <h3 className="font-bold mt-4">第4条（禁止事項）</h3>
+              <p>ユーザーは、以下の行為をしてはなりません。</p>
+              <ul className="list-disc pl-5 mt-2">
+                <li>法令または公序良俗に違反する行為</li>
+                <li>本アプリの運営を妨害する行為</li>
+                <li>他のユーザーに迷惑をかける行為</li>
+                <li>本アプリを不正に利用する行為</li>
+              </ul>
+
+              <h3 className="font-bold mt-4">第5条（免責事項）</h3>
+              <p>本アプリの利用により生じた損害について、運営者は一切の責任を負いません。また、本アプリの内容、機能、利用可能性について、いかなる保証もいたしません。</p>
+
+              <h3 className="font-bold mt-4">第6条（規約の変更）</h3>
+              <p>運営者は、必要に応じて本規約を変更することができるものとします。変更後の利用規約は、本アプリ内に掲示した時点から効力を生じるものとします。</p>
+
+              <p className="text-gray-500 mt-4">制定日：2025年1月16日</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showPrivacyPolicy && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
