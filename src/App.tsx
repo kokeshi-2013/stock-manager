@@ -2,6 +2,20 @@ import { useState, useEffect } from 'react'
 import type { StockItem } from './types'
 import { loadItems, saveItems } from './services/storage'
 
+const CATEGORIES = [
+  'キッチン',
+  '洗面所',
+  'お風呂',
+  'トイレ',
+  'リビング',
+  '寝室',
+  '廊下',
+  '玄関',
+  '庭',
+  '車',
+  'その他',
+]
+
 function App() {
   const [items, setItems] = useState<StockItem[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -9,11 +23,14 @@ function App() {
   const [isEditing, setIsEditing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortOrder, setSortOrder] = useState<'created' | 'lowStock'>('created')
+  const [selectedCategory, setSelectedCategory] = useState('すべて')
   const [newName, setNewName] = useState('')
   const [newUrl, setNewUrl] = useState('')
   const [newCount, setNewCount] = useState(1)
+  const [newCategory, setNewCategory] = useState('')
   const [editName, setEditName] = useState('')
   const [editUrl, setEditUrl] = useState('')
+  const [editCategory, setEditCategory] = useState('')
 
   useEffect(() => {
     setItems(loadItems())
@@ -25,8 +42,11 @@ function App() {
     }
   }, [items])
 
+  const usedCategories = [...new Set(items.map(item => item.category).filter(c => c))]
+
   const filteredItems = items
     .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter(item => selectedCategory === 'すべて' || item.category === selectedCategory)
     .sort((a, b) => {
       if (sortOrder === 'lowStock') {
         return a.count - b.count
@@ -55,7 +75,7 @@ function App() {
       name: newName,
       count: newCount,
       buyUrl: newUrl,
-      category: '',
+      category: newCategory,
       imageUrl: '',
       createdAt: new Date().toISOString(),
     }
@@ -63,12 +83,17 @@ function App() {
     setNewName('')
     setNewUrl('')
     setNewCount(1)
+    setNewCategory('')
     setIsAddModalOpen(false)
   }
 
   const deleteItem = (id: string) => {
     if (confirm('この商品を削除しますか？')) {
-      setItems(items.filter(item => item.id !== id))
+      const newItems = items.filter(item => item.id !== id)
+      setItems(newItems)
+      if (newItems.length === 0) {
+        saveItems([])
+      }
       setSelectedItem(null)
     }
   }
@@ -77,13 +102,14 @@ function App() {
     if (selectedItem) {
       setEditName(selectedItem.name)
       setEditUrl(selectedItem.buyUrl)
+      setEditCategory(selectedItem.category)
       setIsEditing(true)
     }
   }
 
   const saveEdit = () => {
     if (!selectedItem || !editName.trim()) return
-    const updated = { ...selectedItem, name: editName, buyUrl: editUrl }
+    const updated = { ...selectedItem, name: editName, buyUrl: editUrl, category: editCategory }
     setItems(items.map(item => item.id === selectedItem.id ? updated : item))
     setSelectedItem(updated)
     setIsEditing(false)
@@ -116,6 +142,25 @@ function App() {
             <option value="lowStock">数が少ない順</option>
           </select>
         </div>
+        {usedCategories.length > 0 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+            <button
+              onClick={() => setSelectedCategory('すべて')}
+              className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${selectedCategory === 'すべて' ? 'bg-gray-800 text-white' : 'bg-gray-200'}`}
+            >
+              すべて
+            </button>
+            {usedCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${selectedCategory === cat ? 'bg-gray-800 text-white' : 'bg-gray-200'}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       <main className="p-4 pb-20">
@@ -126,7 +171,7 @@ function App() {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="text-center text-gray-500 mt-10">
-            <p>「{searchQuery}」に一致する商品がありません</p>
+            <p>該当する商品がありません</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -134,6 +179,7 @@ function App() {
               <div key={item.id} onClick={() => setSelectedItem(item)} className="bg-white p-4 rounded-lg shadow flex justify-between items-center cursor-pointer">
                 <div className="flex-1 mr-4">
                   <p className="font-medium text-sm line-clamp-2">{item.name}</p>
+                  {item.category && <p className="text-gray-500 text-xs mt-1">{item.category}</p>}
                   {item.count === 0 && <p className="text-red-500 text-xs mt-1">在庫なし</p>}
                 </div>
                 <div className="flex items-center gap-2">
@@ -151,7 +197,7 @@ function App() {
 
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center">
-          <div className="bg-white w-full max-w-md rounded-t-2xl p-6">
+          <div className="bg-white w-full max-w-md rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">商品の追加</h2>
               <button onClick={() => setIsAddModalOpen(false)} className="text-2xl">×</button>
@@ -160,6 +206,15 @@ function App() {
               <div>
                 <label className="block text-sm font-medium mb-1">商品名</label>
                 <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="例：ボディソープ" className="w-full p-3 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">場所</label>
+                <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="w-full p-3 border rounded-lg bg-white">
+                  <option value="">選択してください</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">購入URL</label>
@@ -181,7 +236,7 @@ function App() {
 
       {selectedItem && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center">
-          <div className="bg-white w-full max-w-md rounded-t-2xl p-6">
+          <div className="bg-white w-full max-w-md rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-end mb-2">
               <button onClick={() => { setSelectedItem(null); setIsEditing(false) }} className="text-2xl">×</button>
             </div>
@@ -191,6 +246,15 @@ function App() {
                 <div>
                   <label className="block text-sm font-medium mb-1">商品名</label>
                   <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-3 border rounded-lg" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">場所</label>
+                  <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full p-3 border rounded-lg bg-white">
+                    <option value="">選択してください</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">購入URL</label>
@@ -204,7 +268,8 @@ function App() {
             ) : (
               <div className="flex flex-col items-center">
                 <div className="w-32 h-32 bg-gray-200 rounded-lg mb-4"></div>
-                <h2 className="text-lg font-bold text-center mb-4">{selectedItem.name}</h2>
+                <h2 className="text-lg font-bold text-center mb-2">{selectedItem.name}</h2>
+                {selectedItem.category && <p className="text-gray-500 text-sm mb-4">{selectedItem.category}</p>}
                 <div className="flex items-center gap-4 mb-6">
                   <button onClick={() => updateCount(selectedItem.id, -1)} className="w-12 h-12 bg-gray-200 rounded-full text-xl font-bold">-</button>
                   <span className="text-2xl font-bold w-12 text-center">{selectedItem.count}</span>
