@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import type { StockItem } from './types'
-import { loadItems, saveItems } from './services/storage'
+import type { StockItem } from '../types'
+import { loadItems, saveItems } from '../services/storage'
 
 const AFFILIATE_TAG = 'kokeshi20130e-22'
 
