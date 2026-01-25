@@ -39,7 +39,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
                     stopScanner();
                     onScan(decodedText);
                 },
-                (errorMessage) => {
+                () => {
                     // エラーは無視(継続的にスキャン中)
                 }
             );
