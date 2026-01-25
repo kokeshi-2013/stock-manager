@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import type { StockItem } from '../types'
 import { loadItems, saveItems } from '../services/storage'
 import { InstallPrompt } from '../components/InstallPrompt';
+import { BarcodeScanner } from '../components/BarcodeScanner';
 
 const AFFILIATE_TAG = 'kokeshi20130e-22'
 
@@ -50,6 +51,7 @@ function App() {
   const [editCategory, setEditCategory] = useState('')
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
 
   useEffect(() => {
     setItems(loadItems())
@@ -85,6 +87,15 @@ function App() {
       const nc = selectedItem.count + delta
       setSelectedItem({ ...selectedItem, count: nc < 0 ? 0 : nc })
     }
+  }
+
+  const handleBarcodeScan = (code: string) => {
+    setShowBarcodeScanner(false)
+    // Amazonで検索するURLを生成
+    const amazonSearchUrl = `https://www.amazon.co.jp/s?k=${code}&tag=${AFFILIATE_TAG}`
+    window.open(amazonSearchUrl, '_blank')
+    // 商品追加モーダルを開く
+    setIsAddModalOpen(true)
   }
 
   const addItem = () => {
@@ -223,6 +234,15 @@ function App() {
             </div>
             <div className="space-y-4">
               <div>
+                <button
+                  onClick={() => {
+                    setIsAddModalOpen(false)
+                    setShowBarcodeScanner(true)
+                  }}
+                  className="w-full p-3 bg-blue-500 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2"
+                >
+                  📷 バーコードをスキャン
+                </button>
                 <label className="block text-sm font-medium mb-1">商品名</label>
                 <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="例：ボディソープ" className="w-full p-3 border rounded-lg" />
               </div>
@@ -388,6 +408,12 @@ function App() {
         </div>
       )}
 
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          onScan={handleBarcodeScan}
+          onClose={() => setShowBarcodeScanner(false)}
+        />
+      )}
       <InstallPrompt />
     </div>
   )
