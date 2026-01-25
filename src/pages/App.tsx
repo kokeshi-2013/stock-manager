@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { StockItem } from '../types'
 import { loadItems, saveItems } from '../services/storage'
+import { InstallPrompt } from '../components/InstallPrompt';
 
 const AFFILIATE_TAG = 'kokeshi20130e-22'
 
@@ -386,6 +387,8 @@ function App() {
           </div>
         </div>
       )}
+
+      <InstallPrompt />
     </div>
   )
 }
