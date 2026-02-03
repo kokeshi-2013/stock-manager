@@ -6,7 +6,7 @@ function Landing() {
             {/* ヒーロー */}
             <header className="bg-white shadow">
                 <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-                    <h1 className="text-xl font-bold">カイタス</h1>
+                    <img src="/logohorizontal.svg" alt="カイタス" className="h-10" />
                     <Link to="/app" className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold">
                         アプリを開く
                     </Link>
