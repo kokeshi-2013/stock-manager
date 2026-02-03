@@ -152,7 +152,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white p-4 shadow">
-        <h1 className="text-xl font-bold">カイタス</h1>
+        <img src="/logohorizontal.svg" alt="カイタス" className="h-8" />
         <div className="mt-3">
           <input
             type="text"
