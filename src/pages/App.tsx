@@ -20,6 +20,122 @@ const toAffiliateUrl = (url: string): string => {
   return url
 }
 
+const getSmartIcon = (name: string, category: string): string => {
+  const nameLower = name.toLowerCase()
+
+  // 商品名から判定（優先）
+  if (nameLower.includes('シャンプー') || nameLower.includes('リンス') || nameLower.includes('コンディショナー')) return '🧴'
+  if (nameLower.includes('ボディソープ') || nameLower.includes('石鹸') || nameLower.includes('ボディーソープ')) return '🧼'
+  if (nameLower.includes('洗剤') || nameLower.includes('洗濯')) return '🧽'
+  if (nameLower.includes('トイレ') || nameLower.includes('便器')) return '🚽'
+  if (nameLower.includes('ラップ') || nameLower.includes('フィルム')) return '📦'
+  if (nameLower.includes('ティッシュ') || nameLower.includes('ペーパー')) return '🧻'
+  if (nameLower.includes('歯磨き') || nameLower.includes('歯ブラシ')) return '🪥'
+  if (nameLower.includes('タオル')) return '🧺'
+  if (nameLower.includes('スポンジ')) return '🧽'
+  if (nameLower.includes('ゴミ袋')) return '🗑️'
+  if (nameLower.includes('柔軟剤')) return '🧴'
+  if (nameLower.includes('漂白剤')) return '🧪'
+  if (nameLower.includes('洗顔') || nameLower.includes('クレンジング')) return '🧴'
+  if (nameLower.includes('化粧水') || nameLower.includes('乳液')) return '💧'
+
+  // キッチン消耗品
+  if (nameLower.includes('アルミホイル')) return '📋'
+  if (nameLower.includes('クッキングシート') || nameLower.includes('オーブンシート')) return '📄'
+  if (nameLower.includes('排水口') || nameLower.includes('ネット')) return '🕸️'
+  if (nameLower.includes('ふきん') || nameLower.includes('布巾')) return '🧺'
+  if (nameLower.includes('保存容器') || nameLower.includes('タッパー')) return '📦'
+  if (nameLower.includes('割り箸') || nameLower.includes('割箸')) return '🥢'
+  if (nameLower.includes('紙コップ') || nameLower.includes('紙皿')) return '🥤'
+
+  // 洗面所
+  if (nameLower.includes('ハンドソープ')) return '🧼'
+  if (nameLower.includes('綿棒')) return '🦴'
+  if (nameLower.includes('コットン')) return '☁️'
+  if (nameLower.includes('化粧品') || nameLower.includes('メイク')) return '💄'
+  if (nameLower.includes('整髪料') || nameLower.includes('ワックス') || nameLower.includes('ジェル')) return '💇'
+  if (nameLower.includes('ドライヤー')) return '💨'
+  if (nameLower.includes('くし') || nameLower.includes('ブラシ')) return '💇'
+
+  // お風呂
+  if (nameLower.includes('入浴剤')) return '🛀'
+  if (nameLower.includes('カビ') || nameLower.includes('カビキラー')) return '🧪'
+  if (nameLower.includes('バスマット')) return '🧺'
+
+  // トイレ
+  if (nameLower.includes('トイレクリーナー')) return '🧹'
+  if (nameLower.includes('芳香剤') || nameLower.includes('消臭')) return '🌸'
+  if (nameLower.includes('便座シート')) return '🚽'
+  if (nameLower.includes('ブラシ')) return '🧹'
+
+  // リビング
+  if (nameLower.includes('電池') || nameLower.includes('バッテリー')) return '🔋'
+  if (nameLower.includes('リモコン')) return '📺'
+  if (nameLower.includes('クイックル') || nameLower.includes('フローリング')) return '🧹'
+  if (nameLower.includes('ファブリーズ') || nameLower.includes('消臭スプレー')) return '💨'
+  if (nameLower.includes('ウェット') || nameLower.includes('ウエット')) return '🧻'
+  if (nameLower.includes('掃除')) return '🧹'
+
+  // 寝室
+  if (nameLower.includes('シーツ') || nameLower.includes('布団カバー')) return '🛏️'
+  if (nameLower.includes('枕カバー')) return '🛏️'
+  if (nameLower.includes('防虫剤')) return '🦟'
+
+  // 廊下
+  if (nameLower.includes('掃除機') || nameLower.includes('クリーナー')) return '🧹'
+
+  // 玄関
+  if (nameLower.includes('靴') || nameLower.includes('シューズ')) return '👟'
+  if (nameLower.includes('玄関マット')) return '🧺'
+
+  // 庭
+  if (nameLower.includes('肥料')) return '🌱'
+  if (nameLower.includes('土')) return '🌍'
+  if (nameLower.includes('殺虫剤') || nameLower.includes('虫除け')) return '🦟'
+  if (nameLower.includes('ホース')) return '💧'
+
+  // 車
+  if (nameLower.includes('ガソリン') || nameLower.includes('燃料')) return '⛽'
+  if (nameLower.includes('洗車')) return '🚿'
+  if (nameLower.includes('タイヤ')) return '🛞'
+
+  // 食品系
+  if (nameLower.includes('米') || nameLower.includes('ごはん')) return '🍚'
+  if (nameLower.includes('パン')) return '🍞'
+  if (nameLower.includes('牛乳') || nameLower.includes('ミルク')) return '🥛'
+  if (nameLower.includes('卵')) return '🥚'
+  if (nameLower.includes('水') || nameLower.includes('ミネラルウォーター')) return '💧'
+  if (nameLower.includes('お茶') || nameLower.includes('緑茶')) return '🍵'
+  if (nameLower.includes('コーヒー')) return '☕'
+  if (nameLower.includes('ジュース')) return '🧃'
+  if (nameLower.includes('ビール') || nameLower.includes('酒')) return '🍺'
+  if (nameLower.includes('調味料') || nameLower.includes('醤油') || nameLower.includes('みりん')) return '🧂'
+  if (nameLower.includes('砂糖')) return '🧂'
+  if (nameLower.includes('塩')) return '🧂'
+  if (nameLower.includes('油')) return '🛢️'
+  if (nameLower.includes('麺') || nameLower.includes('パスタ') || nameLower.includes('うどん') || nameLower.includes('ラーメン') || nameLower.includes('そば') || nameLower.includes('そうめん')) return '🍜'
+  if (nameLower.includes('缶詰')) return '🥫'
+  if (nameLower.includes('レトルト') || nameLower.includes('カレー')) return '🍛'
+  if (nameLower.includes('お菓子') || nameLower.includes('スナック')) return '🍪'
+  if (nameLower.includes('チョコ')) return '🍫'
+
+  // カテゴリから判定（フォールバック）
+  const icons: Record<string, string> = {
+    'キッチン': '🍳',
+    '洗面所': '🧴',
+    'お風呂': '🛁',
+    'トイレ': '🚽',
+    'リビング': '🛋️',
+    '寝室': '🛏️',
+    '廊下': '🚪',
+    '玄関': '👞',
+    '庭': '🌳',
+    '車': '🚗',
+    'その他': '📦',
+  }
+  return icons[category] || '🏠'
+}
+
 const CATEGORIES = [
   'キッチン',
   '洗面所',
@@ -46,9 +162,11 @@ function App() {
   const [newUrl, setNewUrl] = useState('')
   const [newCount, setNewCount] = useState(1)
   const [newCategory, setNewCategory] = useState('')
+  const [newImageUrl, setNewImageUrl] = useState('')
   const [editName, setEditName] = useState('')
   const [editUrl, setEditUrl] = useState('')
   const [editCategory, setEditCategory] = useState('')
+  const [editImageUrl, setEditImageUrl] = useState('')
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
@@ -106,7 +224,7 @@ function App() {
       count: newCount,
       buyUrl: newUrl,
       category: newCategory,
-      imageUrl: '',
+      imageUrl: newImageUrl,
       createdAt: new Date().toISOString(),
     }
     setItems([...items, newItem])
@@ -114,6 +232,7 @@ function App() {
     setNewUrl('')
     setNewCount(1)
     setNewCategory('')
+    setNewImageUrl('')
     setIsAddModalOpen(false)
   }
 
@@ -133,13 +252,14 @@ function App() {
       setEditName(selectedItem.name)
       setEditUrl(selectedItem.buyUrl)
       setEditCategory(selectedItem.category)
+      setEditImageUrl(selectedItem.imageUrl)
       setIsEditing(true)
     }
   }
 
   const saveEdit = () => {
     if (!selectedItem || !editName.trim()) return
-    const updated = { ...selectedItem, name: editName, buyUrl: editUrl, category: editCategory }
+    const updated = { ...selectedItem, name: editName, buyUrl: editUrl, category: editCategory, imageUrl: editImageUrl }
     setItems(items.map(item => item.id === selectedItem.id ? updated : item))
     setSelectedItem(updated)
     setIsEditing(false)
@@ -207,10 +327,19 @@ function App() {
           <div className="space-y-3">
             {filteredItems.map((item) => (
               <div key={item.id} onClick={() => setSelectedItem(item)} className="bg-white p-4 rounded-lg shadow flex justify-between items-center cursor-pointer">
-                <div className="flex-1 mr-4">
-                  <p className="font-medium text-sm line-clamp-2">{item.name}</p>
-                  {item.category && <p className="text-gray-500 text-xs mt-1">{item.category}</p>}
-                  {item.count === 0 && <p className="text-red-500 text-xs mt-1">在庫なし</p>}
+                <div className="flex items-center gap-3 flex-1 mr-4">
+                  <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{getSmartIcon(item.name, item.category)}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm line-clamp-2">{item.name}</p>
+                    {item.category && <p className="text-gray-500 text-xs mt-1">{item.category}</p>}
+                    {item.count === 0 && <p className="text-red-500 text-xs mt-1">在庫なし</p>}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={(e) => { e.stopPropagation(); updateCount(item.id, -1) }} className="w-8 h-8 bg-gray-200 rounded-full text-lg font-bold">-</button>
@@ -299,14 +428,26 @@ function App() {
                   <label className="block text-sm font-medium mb-1">購入URL</label>
                   <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} className="w-full p-3 border rounded-lg" />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">商品画像URL（任意）</label>
+                  <input type="text" value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)} placeholder="https://..." className="w-full p-3 border rounded-lg" />
+                  <p className="text-xs text-gray-500 mt-1">※ 未入力の場合はカテゴリアイコンを表示</p>
+                </div>
                 <div className="flex gap-3">
+
                   <button onClick={cancelEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">キャンセル</button>
                   <button onClick={saveEdit} className="flex-1 p-3 bg-gray-800 text-white rounded-lg font-bold">保存</button>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="w-32 h-32 bg-gray-100 rounded-lg mb-4 flex items-center justify-center text-6xl overflow-hidden">
+                  {selectedItem.imageUrl ? (
+                    <img src={selectedItem.imageUrl} alt={selectedItem.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{getSmartIcon(selectedItem.name, selectedItem.category)}</span>
+                  )}
+                </div>
                 <h2 className="text-lg font-bold text-center mb-2">{selectedItem.name}</h2>
                 {selectedItem.category && <p className="text-gray-500 text-sm mb-4">{selectedItem.category}</p>}
                 <div className="flex items-center gap-4 mb-6">
