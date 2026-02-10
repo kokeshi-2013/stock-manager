@@ -2,7 +2,11 @@ export interface StockItem {
     id: string
     name: string
     count: number
-    buyUrl: string
+    buyUrls: {
+        rakuten?: string
+        amazon?: string
+        yahoo?: string
+    }
     category: string
     imageUrl: string
     createdAt: string

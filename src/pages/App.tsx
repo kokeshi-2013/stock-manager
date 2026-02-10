@@ -159,12 +159,12 @@ function App() {
   const [sortOrder, setSortOrder] = useState<'created' | 'lowStock'>('created')
   const [selectedCategory, setSelectedCategory] = useState('すべて')
   const [newName, setNewName] = useState('')
-  const [newUrl, setNewUrl] = useState('')
+  const [newAmazonUrl, setNewAmazonUrl] = useState('')
   const [newCount, setNewCount] = useState(1)
   const [newCategory, setNewCategory] = useState('')
   const [newImageUrl, setNewImageUrl] = useState('')
   const [editName, setEditName] = useState('')
-  const [editUrl, setEditUrl] = useState('')
+  const [editAmazonUrl, setEditAmazonUrl] = useState('')
   const [editCategory, setEditCategory] = useState('')
   const [editImageUrl, setEditImageUrl] = useState('')
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
@@ -207,13 +207,31 @@ function App() {
     }
   }
 
-  const handleBarcodeScan = (code: string) => {
+  const handleBarcodeScan = async (code: string) => {
     setShowBarcodeScanner(false)
-    // Amazonで検索するURLを生成
-    const amazonSearchUrl = `https://www.amazon.co.jp/s?k=${code}&tag=${AFFILIATE_TAG}`
-    window.open(amazonSearchUrl, '_blank')
-    // 商品追加モーダルを開く
     setIsAddModalOpen(true)
+
+    try {
+      // 楽天APIで商品情報を取得
+      const response = await fetch(`/api/rakuten-search?jan=${code}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        // 商品情報を自動入力
+        setNewName(data.name)
+        setNewImageUrl(data.imageUrl)
+        // 楽天URLも保存できるように準備（次のステップで実装）
+        // setNewRakutenUrl(data.rakutenUrl)
+      } else {
+        // 商品が見つからない場合、JANコードを商品名に
+        setNewName(`JANコード: ${code}`)
+        alert('商品が見つかりませんでした。商品名を入力してください。')
+      }
+    } catch (error) {
+      console.error('楽天API呼び出しエラー:', error)
+      setNewName(`JANコード: ${code}`)
+      alert('商品情報の取得に失敗しました。')
+    }
   }
 
   const addItem = () => {
@@ -222,14 +240,16 @@ function App() {
       id: Date.now().toString(),
       name: newName,
       count: newCount,
-      buyUrl: newUrl,
+      buyUrls: {
+        amazon: newAmazonUrl || undefined,
+      },
       category: newCategory,
       imageUrl: newImageUrl,
       createdAt: new Date().toISOString(),
     }
     setItems([...items, newItem])
     setNewName('')
-    setNewUrl('')
+    setNewAmazonUrl('')
     setNewCount(1)
     setNewCategory('')
     setNewImageUrl('')
@@ -250,7 +270,7 @@ function App() {
   const startEdit = () => {
     if (selectedItem) {
       setEditName(selectedItem.name)
-      setEditUrl(selectedItem.buyUrl)
+      setEditAmazonUrl(selectedItem.buyUrls.amazon || '')
       setEditCategory(selectedItem.category)
       setEditImageUrl(selectedItem.imageUrl)
       setIsEditing(true)
@@ -259,7 +279,16 @@ function App() {
 
   const saveEdit = () => {
     if (!selectedItem || !editName.trim()) return
-    const updated = { ...selectedItem, name: editName, buyUrl: editUrl, category: editCategory, imageUrl: editImageUrl }
+    const updated = {
+      ...selectedItem,
+      name: editName,
+      buyUrls: {
+        ...selectedItem.buyUrls,
+        amazon: editAmazonUrl || undefined,
+      },
+      category: editCategory,
+      imageUrl: editImageUrl
+    }
     setItems(items.map(item => item.id === selectedItem.id ? updated : item))
     setSelectedItem(updated)
     setIsEditing(false)
@@ -385,8 +414,8 @@ function App() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">購入URL</label>
-                <input type="text" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://www.amazon.co.jp/..." className="w-full p-3 border rounded-lg" />
+                <label className="block text-sm font-medium mb-1">Amazon URL（任意）</label>
+                <input type="text" value={newAmazonUrl} onChange={(e) => setNewAmazonUrl(e.target.value)} placeholder="https://www.amazon.co.jp/..." className="w-full p-3 border rounded-lg" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">初期在庫数</label>
@@ -425,8 +454,8 @@ function App() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">購入URL</label>
-                  <input type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} className="w-full p-3 border rounded-lg" />
+                  <label className="block text-sm font-medium mb-1">Amazon URL（任意）</label>
+                  <input type="text" value={editAmazonUrl} onChange={(e) => setEditAmazonUrl(e.target.value)} className="w-full p-3 border rounded-lg" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">商品画像URL（任意）</label>
@@ -455,8 +484,8 @@ function App() {
                   <span className="text-2xl font-bold w-12 text-center">{selectedItem.count}</span>
                   <button onClick={() => updateCount(selectedItem.id, 1)} className="w-12 h-12 bg-gray-200 rounded-full text-xl font-bold">+</button>
                 </div>
-                {selectedItem.buyUrl && (
-                  <a href={toAffiliateUrl(selectedItem.buyUrl)} target="_blank" rel="noopener noreferrer" className="w-full p-3 bg-gray-800 text-white rounded-lg font-bold text-center block mb-3">Amazonで買う</a>
+                {selectedItem.buyUrls.amazon && (
+                  <a href={toAffiliateUrl(selectedItem.buyUrls.amazon)} target="_blank" rel="noopener noreferrer" className="w-full p-3 bg-gray-800 text-white rounded-lg font-bold text-center block mb-3">Amazonで買う</a>
                 )}
                 <div className="flex gap-3 w-full">
                   <button onClick={startEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">編集</button>
