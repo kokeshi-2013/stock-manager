@@ -170,6 +170,12 @@ function App() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
+  const [newRakutenUrl, setNewRakutenUrl] = useState('')
+  const [newYahooUrl, setNewYahooUrl] = useState('')
+  const [editRakutenUrl, setEditRakutenUrl] = useState('')
+  const [editYahooUrl, setEditYahooUrl] = useState('')
+  const [showEditBarcodeScanner, setShowEditBarcodeScanner] = useState(false)
+  const [isBarcodeSearching, setIsBarcodeSearching] = useState(false)
 
   useEffect(() => {
     setItems(loadItems())
@@ -207,38 +213,78 @@ function App() {
     }
   }
 
+  const searchByBarcode = async (code: string) => {
+    const [yahooResult, rakutenResult] = await Promise.allSettled([
+      fetch(`/api/yahoo-search?jan=${code}`).then(r => r.json()),
+      fetch(`/api/rakuten-search?jan=${code}`).then(r => r.json()),
+    ])
+
+    let name = ''
+    let imageUrl = ''
+    let yahooUrl = ''
+    let rakutenUrl = ''
+
+    if (yahooResult.status === 'fulfilled' && yahooResult.value.found) {
+      name = yahooResult.value.name
+      imageUrl = yahooResult.value.imageUrl
+      yahooUrl = yahooResult.value.yahooUrl || ''
+    }
+
+    if (rakutenResult.status === 'fulfilled' && rakutenResult.value.found) {
+      if (!name) name = rakutenResult.value.name
+      if (!imageUrl) imageUrl = rakutenResult.value.imageUrl
+      rakutenUrl = rakutenResult.value.rakutenUrl || ''
+    }
+
+    return { name, imageUrl, yahooUrl, rakutenUrl, found: !!name }
+  }
+
   const handleBarcodeScan = async (code: string) => {
     setShowBarcodeScanner(false)
     setIsAddModalOpen(true)
+    setIsBarcodeSearching(true)
 
     try {
-      // Yahoo!ショッピングAPIで商品情報を取得（優先）
-      const yahooResponse = await fetch(`/api/yahoo-search?jan=${code}`)
-      const yahooData = await yahooResponse.json()
+      const result = await searchByBarcode(code)
 
-      if (yahooResponse.ok && yahooData.found) {
-        setNewName(yahooData.name)
-        setNewImageUrl(yahooData.imageUrl)
-        return
+      if (result.found) {
+        setNewName(result.name)
+        setNewImageUrl(result.imageUrl)
+        setNewYahooUrl(result.yahooUrl)
+        setNewRakutenUrl(result.rakutenUrl)
+      } else {
+        setNewName(`JANコード: ${code}`)
+        alert('商品が見つかりませんでした。商品名を入力してください。')
       }
-
-      // Yahoo!で見つからない場合、楽天APIにフォールバック
-      const rakutenResponse = await fetch(`/api/rakuten-search?jan=${code}`)
-      const rakutenData = await rakutenResponse.json()
-
-      if (rakutenResponse.ok && rakutenData.found) {
-        setNewName(rakutenData.name)
-        setNewImageUrl(rakutenData.imageUrl)
-        return
-      }
-
-      // どちらでも見つからない場合
-      setNewName(`JANコード: ${code}`)
-      alert('商品が見つかりませんでした。商品名を入力してください。')
     } catch (error) {
       console.error('商品検索エラー:', error)
       setNewName(`JANコード: ${code}`)
       alert('商品情報の取得に失敗しました。')
+    } finally {
+      setIsBarcodeSearching(false)
+    }
+  }
+
+  const handleEditBarcodeScan = async (code: string) => {
+    setShowEditBarcodeScanner(false)
+    setIsBarcodeSearching(true)
+
+    try {
+      const result = await searchByBarcode(code)
+
+      if (result.found) {
+        setEditName(result.name)
+        setEditImageUrl(result.imageUrl)
+        setEditYahooUrl(result.yahooUrl)
+        setEditRakutenUrl(result.rakutenUrl)
+      } else {
+        alert('商品が見つかりませんでした。')
+      }
+    } catch (error) {
+      console.error('商品検索エラー:', error)
+      alert('商品情報の取得に失敗しました。')
+    } finally {
+      setIsBarcodeSearching(false)
     }
   }
 
@@ -250,6 +296,8 @@ function App() {
       count: newCount,
       buyUrls: {
         amazon: newAmazonUrl || undefined,
+        rakuten: newRakutenUrl || undefined,
+        yahoo: newYahooUrl || undefined,
       },
       category: newCategory,
       imageUrl: newImageUrl,
@@ -258,6 +306,8 @@ function App() {
     setItems([...items, newItem])
     setNewName('')
     setNewAmazonUrl('')
+    setNewRakutenUrl('')
+    setNewYahooUrl('')
     setNewCount(1)
     setNewCategory('')
     setNewImageUrl('')
@@ -279,6 +329,8 @@ function App() {
     if (selectedItem) {
       setEditName(selectedItem.name)
       setEditAmazonUrl(selectedItem.buyUrls.amazon || '')
+      setEditRakutenUrl(selectedItem.buyUrls.rakuten || '')
+      setEditYahooUrl(selectedItem.buyUrls.yahoo || '')
       setEditCategory(selectedItem.category)
       setEditImageUrl(selectedItem.imageUrl)
       setIsEditing(true)
@@ -293,6 +345,8 @@ function App() {
       buyUrls: {
         ...selectedItem.buyUrls,
         amazon: editAmazonUrl || undefined,
+        rakuten: editRakutenUrl || undefined,
+        yahoo: editYahooUrl || undefined,
       },
       category: editCategory,
       imageUrl: editImageUrl
@@ -396,7 +450,7 @@ function App() {
           <div className="bg-white w-full max-w-md rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">商品の追加</h2>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-2xl">×</button>
+              <button onClick={() => { setIsAddModalOpen(false); setNewName(''); setNewAmazonUrl(''); setNewRakutenUrl(''); setNewYahooUrl(''); setNewCount(1); setNewCategory(''); setNewImageUrl('') }} className="text-2xl">×</button>
             </div>
             <div className="space-y-4">
               <div>
@@ -405,9 +459,10 @@ function App() {
                     setIsAddModalOpen(false)
                     setShowBarcodeScanner(true)
                   }}
-                  className="w-full p-3 bg-blue-500 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2"
+                  disabled={isBarcodeSearching}
+                  className="w-full p-3 bg-blue-500 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  📷 バーコードをスキャン
+                  {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
                 </button>
                 <label className="block text-sm font-medium mb-1">商品名</label>
                 <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="例：ボディソープ" className="w-full p-3 border rounded-lg" />
@@ -448,6 +503,13 @@ function App() {
 
             {isEditing ? (
               <div className="space-y-4">
+                <button
+                  onClick={() => setShowEditBarcodeScanner(true)}
+                  disabled={isBarcodeSearching}
+                  className="w-full p-3 bg-blue-500 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
+                </button>
                 <div>
                   <label className="block text-sm font-medium mb-1">商品名</label>
                   <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-3 border rounded-lg" />
@@ -494,6 +556,12 @@ function App() {
                 </div>
                 {selectedItem.buyUrls.amazon && (
                   <a href={toAffiliateUrl(selectedItem.buyUrls.amazon)} target="_blank" rel="noopener noreferrer" className="w-full p-3 bg-gray-800 text-white rounded-lg font-bold text-center block mb-3">Amazonで買う</a>
+                )}
+                {selectedItem.buyUrls.yahoo && (
+                  <a href={selectedItem.buyUrls.yahoo} target="_blank" rel="noopener noreferrer" className="w-full p-3 bg-red-600 text-white rounded-lg font-bold text-center block mb-3">Yahoo!で買う</a>
+                )}
+                {selectedItem.buyUrls.rakuten && (
+                  <a href={selectedItem.buyUrls.rakuten} target="_blank" rel="noopener noreferrer" className="w-full p-3 bg-red-500 text-white rounded-lg font-bold text-center block mb-3">楽天市場で買う</a>
                 )}
                 <div className="flex gap-3 w-full">
                   <button onClick={startEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">編集</button>
@@ -590,6 +658,12 @@ function App() {
         <BarcodeScanner
           onScan={handleBarcodeScan}
           onClose={() => setShowBarcodeScanner(false)}
+        />
+      )}
+      {showEditBarcodeScanner && (
+        <BarcodeScanner
+          onScan={handleEditBarcodeScan}
+          onClose={() => setShowEditBarcodeScanner(false)}
         />
       )}
       <InstallPrompt />
