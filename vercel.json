@@ -6,6 +6,10 @@
         "api/rakuten-search.js": {
             "memory": 128,
             "maxDuration": 10
+        },
+        "api/yahoo-search.js": {
+            "memory": 128,
+            "maxDuration": 10
         }
     }
 }

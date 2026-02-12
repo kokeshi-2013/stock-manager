@@ -212,23 +212,31 @@ function App() {
     setIsAddModalOpen(true)
 
     try {
-      // 楽天APIで商品情報を取得
-      const response = await fetch(`/api/rakuten-search?jan=${code}`)
-      const data = await response.json()
+      // Yahoo!ショッピングAPIで商品情報を取得（優先）
+      const yahooResponse = await fetch(`/api/yahoo-search?jan=${code}`)
+      const yahooData = await yahooResponse.json()
 
-      if (response.ok) {
-        // 商品情報を自動入力
-        setNewName(data.name)
-        setNewImageUrl(data.imageUrl)
-        // 楽天URLも保存できるように準備（次のステップで実装）
-        // setNewRakutenUrl(data.rakutenUrl)
-      } else {
-        // 商品が見つからない場合、JANコードを商品名に
-        setNewName(`JANコード: ${code}`)
-        alert('商品が見つかりませんでした。商品名を入力してください。')
+      if (yahooResponse.ok && yahooData.found) {
+        setNewName(yahooData.name)
+        setNewImageUrl(yahooData.imageUrl)
+        return
       }
+
+      // Yahoo!で見つからない場合、楽天APIにフォールバック
+      const rakutenResponse = await fetch(`/api/rakuten-search?jan=${code}`)
+      const rakutenData = await rakutenResponse.json()
+
+      if (rakutenResponse.ok && rakutenData.found) {
+        setNewName(rakutenData.name)
+        setNewImageUrl(rakutenData.imageUrl)
+        return
+      }
+
+      // どちらでも見つからない場合
+      setNewName(`JANコード: ${code}`)
+      alert('商品が見つかりませんでした。商品名を入力してください。')
     } catch (error) {
-      console.error('楽天API呼び出しエラー:', error)
+      console.error('商品検索エラー:', error)
       setNewName(`JANコード: ${code}`)
       alert('商品情報の取得に失敗しました。')
     }
