@@ -21,8 +21,14 @@ export default async function handler(req, res) {
     try {
         const url = `https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch?appid=${YAHOO_CLIENT_ID}&jan_code=${jan}`
 
+        console.log('Yahoo API request URL:', url.replace(YAHOO_CLIENT_ID, '***'))
+
         const response = await fetch(url)
         const data = await response.json()
+
+        console.log('Yahoo API status:', response.status)
+        console.log('Yahoo API response keys:', Object.keys(data))
+        console.log('Yahoo API totalResultsReturned:', data.totalResultsReturned)
 
         if (data.hits && data.hits.length > 0) {
             const item = data.hits[0]

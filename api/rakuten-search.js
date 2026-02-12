@@ -25,8 +25,11 @@ export default async function handler(req, res) {
         const response = await fetch(url)
         const data = await response.json()
 
-        if (data.Items && data.Items.length > 0) {
-            const item = data.Items[0]
+        console.log('Rakuten API status:', response.status)
+        console.log('Rakuten API response keys:', Object.keys(data))
+
+        if (data.items && data.items.length > 0) {
+            const item = data.items[0]
 
             let rakutenUrl = item.itemUrl
             if (RAKUTEN_AFFILIATE_ID) {

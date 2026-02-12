@@ -214,10 +214,14 @@ function App() {
   }
 
   const searchByBarcode = async (code: string) => {
+    console.log('[Barcode] 検索開始:', code)
     const [yahooResult, rakutenResult] = await Promise.allSettled([
       fetch(`/api/yahoo-search?jan=${code}`).then(r => r.json()),
       fetch(`/api/rakuten-search?jan=${code}`).then(r => r.json()),
     ])
+
+    console.log('[Barcode] Yahoo結果:', yahooResult)
+    console.log('[Barcode] 楽天結果:', rakutenResult)
 
     let name = ''
     let imageUrl = ''
