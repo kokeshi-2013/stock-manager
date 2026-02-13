@@ -411,7 +411,7 @@ function App() {
         )}
       </header>
 
-      <main className="p-4 pb-28">
+      <main className="p-4 pb-20">
         {items.length === 0 ? (
           <div className="text-center text-gray-500 mt-10">
             <p>商品がありません</p>
@@ -587,7 +587,7 @@ function App() {
         </div>
       )}
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-gray-100 p-3 text-center z-10">
+      <footer className="bg-gray-100 p-3 text-center">
         <button onClick={() => setShowTerms(true)} className="text-gray-500 text-sm underline">
           利用規約
         </button>
