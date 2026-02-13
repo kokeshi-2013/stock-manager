@@ -369,13 +369,16 @@ function App() {
       <header className="bg-white p-4 shadow">
         <img src="/logohorizontal.svg" alt="カイタス" className="h-8" />
         <div className="mt-3">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="🔍 キーワード検索"
-            className="w-full p-2 border rounded-lg text-sm"
-          />
+          <div className="relative">
+            <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="キーワード検索"
+              className="w-full p-2 pl-10 border rounded-lg text-sm"
+            />
+          </div>
         </div>
         <div className="mt-3">
           <select
@@ -408,7 +411,7 @@ function App() {
         )}
       </header>
 
-      <main className="p-4 pb-20">
+      <main className="p-4 pb-28">
         {items.length === 0 ? (
           <div className="text-center text-gray-500 mt-10">
             <p>商品がありません</p>
@@ -447,7 +450,7 @@ function App() {
         )}
       </main>
 
-      <button onClick={() => setIsAddModalOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-gray-800 text-white rounded-full text-2xl shadow-lg">+</button>
+      <button onClick={() => setIsAddModalOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full text-2xl shadow-lg">+</button>
 
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center">
@@ -498,7 +501,7 @@ function App() {
                   <button onClick={() => setNewCount(newCount + 1)} className="w-10 h-10 bg-gray-200 rounded-full text-lg font-bold">+</button>
                 </div>
               </div>
-              <button onClick={addItem} className="w-full p-3 bg-gray-800 text-white rounded-lg font-bold">追加する</button>
+              <button onClick={addItem} className="w-full p-3 bg-primary text-white rounded-lg font-bold">追加する</button>
             </div>
           </div>
         </div>
@@ -546,7 +549,7 @@ function App() {
                 <div className="flex gap-3">
 
                   <button onClick={cancelEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">キャンセル</button>
-                  <button onClick={saveEdit} className="flex-1 p-3 bg-gray-800 text-white rounded-lg font-bold">保存</button>
+                  <button onClick={saveEdit} className="flex-1 p-3 bg-primary text-white rounded-lg font-bold">保存</button>
                 </div>
               </div>
             ) : (
@@ -584,7 +587,7 @@ function App() {
         </div>
       )}
 
-      <footer className="bg-white border-t p-4 text-center">
+      <footer className="fixed bottom-0 left-0 right-0 bg-gray-100 p-3 text-center z-10">
         <button onClick={() => setShowTerms(true)} className="text-gray-500 text-sm underline">
           利用規約
         </button>
