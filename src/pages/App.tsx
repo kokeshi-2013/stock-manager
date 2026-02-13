@@ -468,6 +468,16 @@ function App() {
                 >
                   {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
                 </button>
+                {newImageUrl && (
+                  <div className="flex justify-center my-3">
+                    <img
+                      src={newImageUrl}
+                      alt="商品画像プレビュー"
+                      className="w-24 h-24 object-cover rounded-lg bg-gray-100"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  </div>
+                )}
                 <label className="block text-sm font-medium mb-1">商品名</label>
                 <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="例：ボディソープ" className="w-full p-3 border rounded-lg" />
               </div>
@@ -481,12 +491,8 @@ function App() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Amazon URL（任意）</label>
-                <input type="text" value={newAmazonUrl} onChange={(e) => setNewAmazonUrl(e.target.value)} placeholder="https://www.amazon.co.jp/..." className="w-full p-3 border rounded-lg" />
-              </div>
-              <div>
                 <label className="block text-sm font-medium mb-1">初期在庫数</label>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 justify-end">
                   <button onClick={() => setNewCount(Math.max(0, newCount - 1))} className="w-10 h-10 bg-gray-200 rounded-full text-lg font-bold">-</button>
                   <span className="text-xl font-bold w-8 text-center">{newCount}</span>
                   <button onClick={() => setNewCount(newCount + 1)} className="w-10 h-10 bg-gray-200 rounded-full text-lg font-bold">+</button>
@@ -514,6 +520,16 @@ function App() {
                 >
                   {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
                 </button>
+                {editImageUrl && (
+                  <div className="flex justify-center my-3">
+                    <img
+                      src={editImageUrl}
+                      alt="商品画像プレビュー"
+                      className="w-24 h-24 object-cover rounded-lg bg-gray-100"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium mb-1">商品名</label>
                   <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-3 border rounded-lg" />
@@ -526,15 +542,6 @@ function App() {
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Amazon URL（任意）</label>
-                  <input type="text" value={editAmazonUrl} onChange={(e) => setEditAmazonUrl(e.target.value)} className="w-full p-3 border rounded-lg" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">商品画像URL（任意）</label>
-                  <input type="text" value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)} placeholder="https://..." className="w-full p-3 border rounded-lg" />
-                  <p className="text-xs text-gray-500 mt-1">※ 未入力の場合はカテゴリアイコンを表示</p>
                 </div>
                 <div className="flex gap-3">
 
