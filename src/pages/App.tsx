@@ -450,10 +450,10 @@ function App() {
         )}
       </main>
 
-      <button onClick={() => setIsAddModalOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full text-2xl shadow-lg">+</button>
+      <button onClick={() => setIsAddModalOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full text-2xl shadow-lg z-30">+</button>
 
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-40">
           <div className="bg-white w-full max-w-md rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">商品の追加</h2>
@@ -508,7 +508,7 @@ function App() {
       )}
 
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-40">
           <div className="bg-white w-full max-w-md rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-end mb-2">
               <button onClick={() => { setSelectedItem(null); setIsEditing(false) }} className="text-2xl">×</button>
