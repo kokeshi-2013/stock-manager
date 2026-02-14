@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #157A6B;
+  /* === Brand カラーパレット === */
+  --color-brand-50: #f0faf8;
+  --color-brand-100: #d9f2ed;
+  --color-brand-200: #b3e5db;
+  --color-brand-300: #7fd4c4;
+  --color-brand-400: #5fc4ad;
+  --color-brand-500: #4CB99C;
+  --color-brand-600: #3d9782;
+  --color-brand-700: #337a6b;
+  --color-brand-800: #2c6157;
+  --color-brand-900: #274f48;
+
+  /* === Semantic Color（用途別の色） === */
+  /* Primary: メインのアクション */
+  --color-primary: #4CB99C;
+  --color-primary-hover: #3d9782;
+  --color-primary-active: #337a6b;
+  --color-primary-light: #d9f2ed;
+
+  /* Error: エラー・削除 */
+  --color-error: #ef4444;
+  --color-error-hover: #dc2626;
+  --color-error-light: #fee2e2;
 }

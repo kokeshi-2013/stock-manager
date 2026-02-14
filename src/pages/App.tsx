@@ -436,7 +436,7 @@ function App() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm line-clamp-2">{item.name}</p>
                     {item.category && <p className="text-gray-500 text-xs mt-1">{item.category}</p>}
-                    {item.count === 0 && <p className="text-red-500 text-xs mt-1">在庫なし</p>}
+                    {item.count === 0 && <p className="text-error text-xs mt-1">在庫なし</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ function App() {
         )}
       </main>
 
-      <button onClick={() => setIsAddModalOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full text-2xl shadow-lg z-30">+</button>
+      <button onClick={() => setIsAddModalOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full text-2xl shadow-lg z-30">+</button>
 
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-40">
@@ -467,7 +467,7 @@ function App() {
                     setShowBarcodeScanner(true)
                   }}
                   disabled={isBarcodeSearching}
-                  className="w-full p-3 bg-blue-500 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full p-3 bg-brand-700 hover:bg-brand-800 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
                 </button>
@@ -501,7 +501,7 @@ function App() {
                   <button onClick={() => setNewCount(newCount + 1)} className="w-10 h-10 bg-gray-200 rounded-full text-lg font-bold">+</button>
                 </div>
               </div>
-              <button onClick={addItem} className="w-full p-3 bg-primary text-white rounded-lg font-bold">追加する</button>
+              <button onClick={addItem} className="w-full p-3 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-lg font-bold">追加する</button>
             </div>
           </div>
         </div>
@@ -519,7 +519,7 @@ function App() {
                 <button
                   onClick={() => setShowEditBarcodeScanner(true)}
                   disabled={isBarcodeSearching}
-                  className="w-full p-3 bg-blue-500 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full p-3 bg-brand-700 hover:bg-brand-800 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
                 </button>
@@ -549,7 +549,7 @@ function App() {
                 <div className="flex gap-3">
 
                   <button onClick={cancelEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">キャンセル</button>
-                  <button onClick={saveEdit} className="flex-1 p-3 bg-primary text-white rounded-lg font-bold">保存</button>
+                  <button onClick={saveEdit} className="flex-1 p-3 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-lg font-bold">保存</button>
                 </div>
               </div>
             ) : (
@@ -579,7 +579,7 @@ function App() {
                 )}
                 <div className="flex gap-3 w-full">
                   <button onClick={startEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">編集</button>
-                  <button onClick={() => deleteItem(selectedItem.id)} className="flex-1 p-3 bg-red-500 text-white rounded-lg font-bold">削除</button>
+                  <button onClick={() => deleteItem(selectedItem.id)} className="flex-1 p-3 bg-error hover:bg-error-hover text-white rounded-lg font-bold">削除</button>
                 </div>
               </div>
             )}
