@@ -167,6 +167,7 @@ function App() {
   const [editAmazonUrl, setEditAmazonUrl] = useState('')
   const [editCategory, setEditCategory] = useState('')
   const [editImageUrl, setEditImageUrl] = useState('')
+  const [editCount, setEditCount] = useState(0)
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
@@ -337,6 +338,7 @@ function App() {
       setEditYahooUrl(selectedItem.buyUrls.yahoo || '')
       setEditCategory(selectedItem.category)
       setEditImageUrl(selectedItem.imageUrl)
+      setEditCount(selectedItem.count)
       setIsEditing(true)
     }
   }
@@ -346,6 +348,7 @@ function App() {
     const updated = {
       ...selectedItem,
       name: editName,
+      count: editCount,
       buyUrls: {
         ...selectedItem.buyUrls,
         amazon: editAmazonUrl || undefined,
@@ -460,32 +463,42 @@ function App() {
               <button onClick={() => { setIsAddModalOpen(false); setNewName(''); setNewAmazonUrl(''); setNewRakutenUrl(''); setNewYahooUrl(''); setNewCount(1); setNewCategory(''); setNewImageUrl('') }} className="text-2xl">×</button>
             </div>
             <div className="space-y-4">
-              <div>
-                <button
-                  onClick={() => {
-                    setIsAddModalOpen(false)
-                    setShowBarcodeScanner(true)
-                  }}
-                  disabled={isBarcodeSearching}
-                  className="w-full p-3 bg-brand-700 hover:bg-brand-800 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
-                </button>
-                {newImageUrl && (
-                  <div className="flex justify-center my-3">
+              <div className="flex justify-center">
+                <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                  {newImageUrl ? (
                     <img
                       src={newImageUrl}
                       alt="商品画像プレビュー"
-                      className="w-24 h-24 object-cover rounded-lg bg-gray-100"
+                      className="w-full h-full object-cover"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
-                  </div>
-                )}
-                <label className="block text-sm font-medium mb-1">商品名</label>
-                <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="例：ボディソープ" className="w-full p-3 border rounded-lg" />
+                  ) : (
+                    <span className="text-gray-300 text-4xl">📷</span>
+                  )}
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">場所</label>
+                <label className="block text-sm font-bold mb-1">商品名</label>
+                <div className="flex gap-2">
+                  <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="例：ボディソープ" className="flex-1 p-3 border rounded-lg" />
+                  <button
+                    onClick={() => {
+                      setIsAddModalOpen(false)
+                      setShowBarcodeScanner(true)
+                    }}
+                    disabled={isBarcodeSearching}
+                    className="w-12 h-12 border-2 border-brand-700 rounded-lg flex items-center justify-center disabled:opacity-50"
+                  >
+                    {isBarcodeSearching ? (
+                      <span className="text-brand-700 text-sm">...</span>
+                    ) : (
+                      <svg className="w-6 h-6 text-brand-700" viewBox="0 0 24 24" fill="currentColor"><path d="M2 4h2v16H2V4zm4 0h1v16H6V4zm2 0h2v16H8V4zm3 0h2v16h-2V4zm3 0h2v16h-2V4zm3 0h1v16h-1V4zm2 0h2v16h-2V4z"/></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">使用場所</label>
                 <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="w-full p-3 border rounded-lg bg-white">
                   <option value="">選択してください</option>
                   {CATEGORIES.map((cat) => (
@@ -494,11 +507,11 @@ function App() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">初期在庫数</label>
+                <label className="block text-sm font-bold mb-1">ストック数</label>
                 <div className="flex items-center gap-3 justify-end">
-                  <button onClick={() => setNewCount(Math.max(0, newCount - 1))} className="w-10 h-10 bg-gray-200 rounded-full text-lg font-bold">-</button>
+                  <button onClick={() => setNewCount(Math.max(0, newCount - 1))} className="w-10 h-10 bg-red-100 text-error rounded-full text-lg font-bold">−</button>
                   <span className="text-xl font-bold w-8 text-center">{newCount}</span>
-                  <button onClick={() => setNewCount(newCount + 1)} className="w-10 h-10 bg-gray-200 rounded-full text-lg font-bold">+</button>
+                  <button onClick={() => setNewCount(newCount + 1)} className="w-10 h-10 bg-brand-100 text-brand-700 rounded-full text-lg font-bold">+</button>
                 </div>
               </div>
               <button onClick={addItem} className="w-full p-3 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-lg font-bold">追加する</button>
@@ -510,50 +523,72 @@ function App() {
       {selectedItem && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-40">
           <div className="bg-white w-full max-w-md rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-end mb-2">
-              <button onClick={() => { setSelectedItem(null); setIsEditing(false) }} className="text-2xl">×</button>
-            </div>
-
             {isEditing ? (
-              <div className="space-y-4">
-                <button
-                  onClick={() => setShowEditBarcodeScanner(true)}
-                  disabled={isBarcodeSearching}
-                  className="w-full p-3 bg-brand-700 hover:bg-brand-800 text-white rounded-lg font-bold mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isBarcodeSearching ? '検索中...' : '📷 バーコードをスキャン'}
-                </button>
-                {editImageUrl && (
-                  <div className="flex justify-center my-3">
-                    <img
-                      src={editImageUrl}
-                      alt="商品画像プレビュー"
-                      className="w-24 h-24 object-cover rounded-lg bg-gray-100"
-                      onError={(e) => { e.currentTarget.style.display = 'none' }}
-                    />
+              <>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold">商品の編集</h2>
+                  <button onClick={() => { setSelectedItem(null); setIsEditing(false) }} className="text-2xl">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {editImageUrl ? (
+                        <img
+                          src={editImageUrl}
+                          alt="商品画像プレビュー"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                      ) : (
+                        <span className="text-gray-300 text-4xl">📷</span>
+                      )}
+                    </div>
                   </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium mb-1">商品名</label>
-                  <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-3 border rounded-lg" />
+                  <div>
+                    <label className="block text-sm font-bold mb-1">商品名</label>
+                    <div className="flex gap-2">
+                      <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="例：ボディソープ" className="flex-1 p-3 border rounded-lg" />
+                      <button
+                        onClick={() => setShowEditBarcodeScanner(true)}
+                        disabled={isBarcodeSearching}
+                        className="w-12 h-12 border-2 border-brand-700 rounded-lg flex items-center justify-center disabled:opacity-50"
+                      >
+                        {isBarcodeSearching ? (
+                          <span className="text-brand-700 text-sm">...</span>
+                        ) : (
+                          <svg className="w-6 h-6 text-brand-700" viewBox="0 0 24 24" fill="currentColor"><path d="M2 4h2v16H2V4zm4 0h1v16H6V4zm2 0h2v16H8V4zm3 0h2v16h-2V4zm3 0h2v16h-2V4zm3 0h1v16h-1V4zm2 0h2v16h-2V4z"/></svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-1">使用場所</label>
+                    <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full p-3 border rounded-lg bg-white">
+                      <option value="">選択してください</option>
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-1">ストック数</label>
+                    <div className="flex items-center gap-3 justify-end">
+                      <button onClick={() => setEditCount(Math.max(0, editCount - 1))} className="w-10 h-10 bg-red-100 text-error rounded-full text-lg font-bold">−</button>
+                      <span className="text-xl font-bold w-8 text-center">{editCount}</span>
+                      <button onClick={() => setEditCount(editCount + 1)} className="w-10 h-10 bg-brand-100 text-brand-700 rounded-full text-lg font-bold">+</button>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={cancelEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">キャンセル</button>
+                    <button onClick={saveEdit} className="flex-1 p-3 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-lg font-bold">保存</button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">場所</label>
-                  <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full p-3 border rounded-lg bg-white">
-                    <option value="">選択してください</option>
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex gap-3">
-
-                  <button onClick={cancelEdit} className="flex-1 p-3 bg-gray-200 rounded-lg font-bold">キャンセル</button>
-                  <button onClick={saveEdit} className="flex-1 p-3 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-lg font-bold">保存</button>
-                </div>
-              </div>
+              </>
             ) : (
               <div className="flex flex-col items-center">
+                <div className="flex justify-end w-full mb-2">
+                  <button onClick={() => { setSelectedItem(null); setIsEditing(false) }} className="text-2xl">×</button>
+                </div>
                 <div className="w-32 h-32 bg-gray-100 rounded-lg mb-4 flex items-center justify-center text-6xl overflow-hidden">
                   {selectedItem.imageUrl ? (
                     <img src={selectedItem.imageUrl} alt={selectedItem.name} className="w-full h-full object-cover" />
