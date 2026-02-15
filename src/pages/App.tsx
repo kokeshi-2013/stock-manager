@@ -157,6 +157,7 @@ function App() {
   const [isEditing, setIsEditing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortOrder, setSortOrder] = useState<'created' | 'lowStock'>('created')
+  const [sortMenuOpen, setSortMenuOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('すべて')
   const [newName, setNewName] = useState('')
   const [newAmazonUrl, setNewAmazonUrl] = useState('')
@@ -383,35 +384,63 @@ function App() {
             />
           </div>
         </div>
-        <div className="mt-3">
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as 'created' | 'lowStock')}
-            className="w-full p-2 border rounded-lg text-sm bg-white"
-          >
-            <option value="created">登録順</option>
-            <option value="lowStock">数が少ない順</option>
-          </select>
-        </div>
-        {usedCategories.length > 0 && (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setSelectedCategory('すべて')}
-              className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${selectedCategory === 'すべて' ? 'bg-gray-800 text-white' : 'bg-gray-200'}`}
-            >
-              すべて
-            </button>
-            {usedCategories.map((cat) => (
+        <div className="mt-3 flex items-center">
+          {/* カテゴリタブのスクロール領域 */}
+          <div className="relative flex-1 overflow-hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2 pr-8 scrollbar-hide">
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${selectedCategory === cat ? 'bg-gray-800 text-white' : 'bg-gray-200'}`}
+                onClick={() => setSelectedCategory('すべて')}
+                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${selectedCategory === 'すべて' ? 'bg-gray-200 text-gray-900' : 'bg-gray-50 text-gray-400'}`}
               >
-                {cat}
+                すべて
               </button>
-            ))}
+              {usedCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${selectedCategory === cat ? 'bg-gray-200 text-gray-900' : 'bg-gray-50 text-gray-400'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            {/* 右端の白グラデーション（フェード） */}
+            <div className="absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-white to-transparent pointer-events-none" />
           </div>
-        )}
+          {/* 区切り線 + 並べ替えボタン */}
+          <div className="relative flex items-center pl-1 flex-shrink-0">
+            <span className="text-gray-300 mr-1">｜</span>
+            <button
+              onClick={() => setSortMenuOpen(!sortMenuOpen)}
+              className="flex items-center gap-1 text-sm text-gray-400 whitespace-nowrap"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 4v16M7 4l-4 4M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4" />
+              </svg>
+              並べ替え
+            </button>
+            {/* 並べ替えドロップダウンメニュー */}
+            {sortMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setSortMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border z-20 py-1 min-w-[140px]">
+                  <button
+                    onClick={() => { setSortOrder('created'); setSortMenuOpen(false) }}
+                    className={`w-full text-left px-4 py-2 text-sm ${sortOrder === 'created' ? 'text-primary font-medium' : 'text-gray-700'}`}
+                  >
+                    登録順
+                  </button>
+                  <button
+                    onClick={() => { setSortOrder('lowStock'); setSortMenuOpen(false) }}
+                    className={`w-full text-left px-4 py-2 text-sm ${sortOrder === 'lowStock' ? 'text-primary font-medium' : 'text-gray-700'}`}
+                  >
+                    数が少ない順
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </header>
 
       <main className="p-4 pb-20">
@@ -443,9 +472,9 @@ function App() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={(e) => { e.stopPropagation(); updateCount(item.id, -1) }} className="w-8 h-8 bg-gray-200 rounded-full text-lg font-bold">-</button>
+                  <button onClick={(e) => { e.stopPropagation(); updateCount(item.id, -1) }} className="w-8 h-8 bg-red-100 text-error rounded-full text-lg font-bold">-</button>
                   <span className="text-lg font-bold w-8 text-center">{item.count}</span>
-                  <button onClick={(e) => { e.stopPropagation(); updateCount(item.id, 1) }} className="w-8 h-8 bg-gray-200 rounded-full text-lg font-bold">+</button>
+                  <button onClick={(e) => { e.stopPropagation(); updateCount(item.id, 1) }} className="w-8 h-8 bg-brand-100 text-brand-700 rounded-full text-lg font-bold">+</button>
                 </div>
               </div>
             ))}

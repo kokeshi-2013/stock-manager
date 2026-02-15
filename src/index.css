@@ -25,3 +25,12 @@
   --color-error-hover: #dc2626;
   --color-error-light: #fee2e2;
 }
+
+/* スクロールバー非表示（カテゴリタブ用） */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
