@@ -13,10 +13,10 @@ export default defineConfig({
         enabled: true
       },
       manifest: {
-        name: 'カイタス - 家庭用消耗品管理',
+        name: 'カイタス - 買い忘れ防止リマインド',
         short_name: 'カイタス',
-        description: '家庭の消耗品を簡単に管理できるアプリ',
-        theme_color: '#3b82f6',
+        description: 'そろそろ買い足すもの、教えてくれる。日用品の買い忘れを防止するリマインドアプリ',
+        theme_color: '#4CB99C',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/app',

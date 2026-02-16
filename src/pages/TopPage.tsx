@@ -1,6 +1,16 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core'
 import { useItemStore } from '../store/itemStore'
 import { useUIStore } from '../store/uiStore'
 import { TABS } from '../constants/tabs'
@@ -9,7 +19,9 @@ import { TabBar } from '../components/common/TabBar'
 import { SearchBar } from '../components/common/SearchBar'
 import { Snackbar } from '../components/common/Snackbar'
 import { ItemList } from '../components/item/ItemList'
+import { ItemCard } from '../components/item/ItemCard'
 import { InstallPrompt } from '../components/pwa/InstallPrompt'
+import type { TabType } from '../types/item'
 
 export default function TopPage() {
   const navigate = useNavigate()
@@ -19,6 +31,7 @@ export default function TopPage() {
   const recalculateAllTabs = useItemStore((s) => s.recalculateAllTabs)
   const runTrashCleanup = useItemStore((s) => s.runTrashCleanup)
   const markAsBought = useItemStore((s) => s.markAsBought)
+  const moveToTab = useItemStore((s) => s.moveToTab)
   const items = useItemStore((s) => s.items)
 
   const activeTab = useUIStore((s) => s.activeTab)
@@ -26,6 +39,8 @@ export default function TopPage() {
   const searchQuery = useUIStore((s) => s.searchQuery)
   const setSearchQuery = useUIStore((s) => s.setSearchQuery)
   const showSnackbar = useUIStore((s) => s.showSnackbar)
+  const draggingItemId = useUIStore((s) => s.draggingItemId)
+  const setDraggingItemId = useUIStore((s) => s.setDraggingItemId)
 
   // 初回：データ移行 + タブ再計算 + ゴミ箱掃除
   useEffect(() => {
@@ -56,7 +71,7 @@ export default function TopPage() {
   }
 
   // 「買った！」処理
-  const handleCheckItem = (id: string) => {
+  const handleCheckItem = useCallback((id: string) => {
     const item = items.find((i) => i.id === id)
     if (!item) return
 
@@ -67,37 +82,92 @@ export default function TopPage() {
     showSnackbar(`${item.name}を買った！に記録しました`, () => {
       useItemStore.getState().undoBought(id, prevHistory, prevTab)
     })
+  }, [items, markAsBought, showSnackbar])
+
+  // ドラッグ&ドロップセンサー（ロングプレス500msで開始）
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: { delay: 500, tolerance: 5 },
+  })
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 500, tolerance: 5 },
+  })
+  const sensors = useSensors(pointerSensor, touchSensor)
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggingItemId(event.active.id as string)
+    // ドラッグ開始時に触覚フィードバック
+    if (navigator.vibrate) navigator.vibrate(50)
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <SearchBar value={searchQuery} onChange={setSearchQuery} />
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setDraggingItemId(null)
 
-      {/* タブコンテンツ（カルーセル） */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex-1 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
-      >
-        {TABS.map((tab) => (
-          <div key={tab.type} className="w-full flex-shrink-0 snap-center overflow-y-auto">
-            <ItemList tab={tab.type} onCheckItem={handleCheckItem} />
-          </div>
-        ))}
+    if (!over) return
+
+    // タブへのドロップ
+    const dropId = over.id as string
+    if (dropId.startsWith('tab-')) {
+      const targetTab = dropId.replace('tab-', '') as TabType
+      const itemId = active.id as string
+      const item = items.find((i) => i.id === itemId)
+      if (!item || item.currentTab === targetTab) return
+
+      const toTab = TABS.find((t) => t.type === targetTab)?.label ?? ''
+
+      moveToTab(itemId, targetTab)
+      showSnackbar(`${item.name}を${toTab}に移動しました`)
+
+      // 移動先のタブに切り替え
+      setActiveTab(targetTab)
+
+      // 触覚フィードバック
+      if (navigator.vibrate) navigator.vibrate(30)
+    }
+  }
+
+  const draggingItem = draggingItemId ? items.find((i) => i.id === draggingItemId) : null
+
+  return (
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {/* タブコンテンツ（カルーセル） */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex-1 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        >
+          {TABS.map((tab) => (
+            <div key={tab.type} className="w-full flex-shrink-0 snap-center overflow-y-auto">
+              <ItemList tab={tab.type} onCheckItem={handleCheckItem} />
+            </div>
+          ))}
+        </div>
+
+        {/* FAB（新規登録ボタン） */}
+        <button
+          onClick={() => navigate('/app/new')}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full shadow-lg z-30 flex items-center justify-center"
+        >
+          <Plus size={28} />
+        </button>
+
+        <Snackbar />
+        <InstallPrompt />
       </div>
 
-      {/* FAB（新規登録ボタン） */}
-      <button
-        onClick={() => navigate('/app/new')}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full shadow-lg z-30 flex items-center justify-center"
-      >
-        <Plus size={28} />
-      </button>
-
-      <Snackbar />
-      <InstallPrompt />
-    </div>
+      {/* ドラッグ中のオーバーレイ */}
+      <DragOverlay>
+        {draggingItem ? (
+          <div className="shadow-xl rounded-lg opacity-90">
+            <ItemCard item={draggingItem} onCheck={() => {}} showCheckbox={false} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   )
 }

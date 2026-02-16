@@ -1,8 +1,9 @@
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { TabType } from '../../types/item'
 import { useItemStore } from '../../store/itemStore'
 import { useUIStore } from '../../store/uiStore'
 import { TABS } from '../../constants/tabs'
-import { ItemCard } from './ItemCard'
+import { DraggableItem } from './DraggableItem'
 import { EmptyState } from '../common/EmptyState'
 
 interface ItemListProps {
@@ -46,15 +47,17 @@ export function ItemList({ tab, onCheckItem }: ItemListProps) {
   const showCheckbox = tab !== 'TRASH'
 
   return (
-    <div>
-      {filtered.map((item) => (
-        <ItemCard
-          key={item.id}
-          item={item}
-          onCheck={onCheckItem}
-          showCheckbox={showCheckbox}
-        />
-      ))}
-    </div>
+    <SortableContext items={filtered.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+      <div>
+        {filtered.map((item) => (
+          <DraggableItem
+            key={item.id}
+            item={item}
+            onCheck={onCheckItem}
+            showCheckbox={showCheckbox}
+          />
+        ))}
+      </div>
+    </SortableContext>
   )
 }

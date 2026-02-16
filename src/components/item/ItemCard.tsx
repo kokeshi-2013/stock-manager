@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import type { Item } from '../../types/item'
@@ -11,22 +12,54 @@ interface ItemCardProps {
 
 export function ItemCard({ item, onCheck, showCheckbox = true }: ItemCardProps) {
   const navigate = useNavigate()
+  const [animState, setAnimState] = useState<'idle' | 'checked' | 'sliding'>('idle')
+
+  const handleCheck = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (animState !== 'idle') return
+
+    // 触覚フィードバック（Android）
+    if (navigator.vibrate) navigator.vibrate(30)
+
+    setAnimState('checked')
+    // 1.5秒後にスライドアウト
+    setTimeout(() => {
+      setAnimState('sliding')
+      // スライドアウト完了後に実際の処理
+      setTimeout(() => {
+        onCheck(item.id)
+      }, 400)
+    }, 1500)
+  }
+
+  const cardClass = [
+    'bg-white px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-gray-100 overflow-hidden transition-colors',
+    animState === 'checked' && 'animate-bought-check',
+    animState === 'sliding' && 'animate-slide-out',
+    animState === 'idle' && 'active:bg-gray-50',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div
-      onClick={() => navigate(`/app/edit/${item.id}`)}
-      className="bg-white px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-gray-50 border-b border-gray-100"
+      onClick={animState === 'idle' ? () => navigate(`/app/edit/${item.id}`) : undefined}
+      className={cardClass}
     >
       {/* チェックボックス */}
       {showCheckbox && (
         <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onCheck(item.id)
-          }}
-          className="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center flex-shrink-0 hover:border-primary transition-colors"
+          onClick={handleCheck}
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+            animState !== 'idle'
+              ? 'border-primary bg-primary'
+              : 'border-gray-300 hover:border-primary'
+          }`}
         >
-          <Check size={14} className="text-transparent" />
+          <Check
+            size={14}
+            className={animState !== 'idle' ? 'text-white' : 'text-transparent'}
+          />
         </button>
       )}
 
@@ -41,18 +74,33 @@ export function ItemCard({ item, onCheck, showCheckbox = true }: ItemCardProps) 
 
       {/* テキスト情報 */}
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm line-clamp-1">{item.name}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          {item.purchasePlace && (
-            <span className="text-xs text-gray-400">{item.purchasePlace}</span>
-          )}
-          {item.memo && (
-            <span className="text-xs text-gray-300">|</span>
-          )}
-          {item.memo && (
-            <span className="text-xs text-gray-400 line-clamp-1">{item.memo}</span>
-          )}
-        </div>
+        {animState !== 'idle' ? (
+          <p className="font-medium text-sm text-primary">買った！ ✅</p>
+        ) : (
+          <>
+            <p className="font-medium text-sm line-clamp-1">{item.name}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              {item.currentTab === 'TRASH' && item.trashedAt ? (
+                <span className="text-xs text-error">
+                  {(() => {
+                    const remaining = 30 - Math.floor((Date.now() - new Date(item.trashedAt).getTime()) / (1000 * 60 * 60 * 24))
+                    return remaining > 0 ? `あと${remaining}日で完全削除` : 'まもなく完全削除'
+                  })()}
+                </span>
+              ) : (
+                <>
+                  {item.purchasePlace && (
+                    <span className="text-xs text-gray-400">{item.purchasePlace}</span>
+                  )}
+                  {item.memo && <span className="text-xs text-gray-300">|</span>}
+                  {item.memo && (
+                    <span className="text-xs text-gray-400 line-clamp-1">{item.memo}</span>
+                  )}
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

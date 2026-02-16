@@ -34,3 +34,29 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* 「買った！」アニメーション */
+@keyframes bought-check {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); background-color: #d9f2ed; }
+  100% { transform: scale(1); background-color: #d9f2ed; }
+}
+@keyframes slide-out-right {
+  0% { transform: translateX(0); opacity: 1; max-height: 80px; }
+  100% { transform: translateX(100%); opacity: 0; max-height: 0; padding: 0; }
+}
+.animate-bought-check {
+  animation: bought-check 0.4s ease-out forwards;
+}
+.animate-slide-out {
+  animation: slide-out-right 0.4s ease-in forwards;
+}
+
+/* スナックバー */
+@keyframes slide-up {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
