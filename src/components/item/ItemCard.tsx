@@ -1,16 +1,25 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check } from 'lucide-react'
+import { Check, GripVertical } from 'lucide-react'
 import type { Item } from '../../types/item'
 import { getSmartIcon } from '../../utils/smartIcon'
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 
 interface ItemCardProps {
   item: Item
   onCheck: (id: string) => void
   showCheckbox?: boolean
+  isDragging?: boolean
+  dragHandleListeners?: SyntheticListenerMap
 }
 
-export function ItemCard({ item, onCheck, showCheckbox = true }: ItemCardProps) {
+export function ItemCard({
+  item,
+  onCheck,
+  showCheckbox = true,
+  isDragging = false,
+  dragHandleListeners,
+}: ItemCardProps) {
   const navigate = useNavigate()
   const [animState, setAnimState] = useState<'idle' | 'checked' | 'sliding'>('idle')
 
@@ -33,10 +42,11 @@ export function ItemCard({ item, onCheck, showCheckbox = true }: ItemCardProps) 
   }
 
   const cardClass = [
-    'bg-white px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-gray-100 overflow-hidden transition-colors',
+    'bg-white px-4 py-3 flex items-center gap-3 cursor-pointer rounded-xl shadow-sm overflow-hidden transition-all',
     animState === 'checked' && 'animate-bought-check',
     animState === 'sliding' && 'animate-slide-out',
     animState === 'idle' && 'active:bg-gray-50',
+    isDragging && 'shadow-lg scale-[1.02]',
   ]
     .filter(Boolean)
     .join(' ')
@@ -46,6 +56,17 @@ export function ItemCard({ item, onCheck, showCheckbox = true }: ItemCardProps) 
       onClick={animState === 'idle' ? () => navigate(`/app/edit/${item.id}`) : undefined}
       className={cardClass}
     >
+      {/* ドラッグハンドル */}
+      {dragHandleListeners && (
+        <div
+          {...dragHandleListeners}
+          className="flex items-center justify-center w-6 flex-shrink-0 touch-none cursor-grab active:cursor-grabbing text-gray-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical size={18} />
+        </div>
+      )}
+
       {/* チェックボックス */}
       {showCheckbox && (
         <button

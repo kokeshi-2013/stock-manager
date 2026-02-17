@@ -30,11 +30,13 @@ export function DraggableItem({ item, onCheck, showCheckbox }: DraggableItemProp
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes}>
       <ItemCard
         item={item}
         onCheck={onCheck}
         showCheckbox={showCheckbox}
+        isDragging={isDragging}
+        dragHandleListeners={listeners}
       />
     </div>
   )

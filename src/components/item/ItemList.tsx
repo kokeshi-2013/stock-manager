@@ -48,7 +48,7 @@ export function ItemList({ tab, onCheckItem }: ItemListProps) {
 
   return (
     <SortableContext items={filtered.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-      <div>
+      <div className="space-y-3 px-4 py-4">
         {filtered.map((item) => (
           <DraggableItem
             key={item.id}
