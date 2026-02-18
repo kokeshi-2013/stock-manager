@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { X, Camera } from 'lucide-react';
+import { Icon } from '../common/Icon';
 
 interface BarcodeScannerProps {
     onScan: (code: string) => void;
@@ -26,13 +26,12 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
             scannerRef.current = scanner;
 
             await scanner.start(
-                { facingMode: 'environment' }, // 背面カメラ
+                { facingMode: 'environment' },
                 {
                     fps: 10,
                     qrbox: { width: 250, height: 250 },
                 },
                 (decodedText) => {
-                    // バーコード読み取り成功(1回だけ)
                     if (hasScannedRef.current) return;
 
                     hasScannedRef.current = true;
@@ -72,7 +71,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
             {/* ヘッダー */}
             <div className="bg-black/80 p-4 flex justify-between items-center">
                 <div className="flex items-center gap-2 text-white">
-                    <Camera size={24} />
+                    <Icon name="photo_camera" size={24} />
                     <h2 className="text-lg font-bold">バーコードスキャン</h2>
                 </div>
                 <button
@@ -80,7 +79,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
                     className="text-white p-2"
                     aria-label="閉じる"
                 >
-                    <X size={24} />
+                    <Icon name="close" size={24} />
                 </button>
             </div>
 

@@ -25,6 +25,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
           count={getCount(tab.type)}
           isActive={activeTab === tab.type}
           isDragging={!!draggingItemId}
+          isCompact={!!tab.isCompact}
           onClick={() => onTabChange(tab.type)}
         />
       ))}

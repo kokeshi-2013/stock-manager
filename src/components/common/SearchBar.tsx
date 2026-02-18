@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react'
+import { Icon } from './Icon'
 
 interface SearchBarProps {
   value: string
@@ -10,7 +10,9 @@ export function SearchBar({ value, onChange, placeholder = 'キーワード検�
   return (
     <div className="px-4 py-2 bg-white">
       <div className="relative">
-        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <Icon name="search" size={18} />
+        </div>
         <input
           type="text"
           value={value}
@@ -23,7 +25,7 @@ export function SearchBar({ value, onChange, placeholder = 'キーワード検�
             onClick={() => onChange('')}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
           >
-            <X size={16} />
+            <Icon name="close" size={16} />
           </button>
         )}
       </div>

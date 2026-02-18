@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, GripVertical } from 'lucide-react'
 import type { Item } from '../../types/item'
 import { getSmartIcon } from '../../utils/smartIcon'
+import { Icon } from '../common/Icon'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 
 interface ItemCardProps {
@@ -27,14 +27,11 @@ export function ItemCard({
     e.stopPropagation()
     if (animState !== 'idle') return
 
-    // 触覚フィードバック（Android）
     if (navigator.vibrate) navigator.vibrate(30)
 
     setAnimState('checked')
-    // 1.5秒後にスライドアウト
     setTimeout(() => {
       setAnimState('sliding')
-      // スライドアウト完了後に実際の処理
       setTimeout(() => {
         onCheck(item.id)
       }, 400)
@@ -53,20 +50,9 @@ export function ItemCard({
 
   return (
     <div
-      onClick={animState === 'idle' ? () => navigate(`/app/edit/${item.id}`) : undefined}
+      onClick={animState === 'idle' && !isDragging ? () => navigate(`/app/edit/${item.id}`) : undefined}
       className={cardClass}
     >
-      {/* ドラッグハンドル */}
-      {dragHandleListeners && (
-        <div
-          {...dragHandleListeners}
-          className="flex items-center justify-center w-6 flex-shrink-0 touch-none cursor-grab active:cursor-grabbing text-gray-300"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVertical size={18} />
-        </div>
-      )}
-
       {/* チェックボックス */}
       {showCheckbox && (
         <button
@@ -77,7 +63,8 @@ export function ItemCard({
               : 'border-gray-300 hover:border-primary'
           }`}
         >
-          <Check
+          <Icon
+            name="check"
             size={14}
             className={animState !== 'idle' ? 'text-white' : 'text-transparent'}
           />
@@ -123,6 +110,17 @@ export function ItemCard({
           </>
         )}
       </div>
+
+      {/* ドラッグハンドル（右端） */}
+      {dragHandleListeners && (
+        <div
+          {...dragHandleListeners}
+          className="flex items-center justify-center w-6 flex-shrink-0 touch-none cursor-grab active:cursor-grabbing text-gray-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Icon name="drag_indicator" size={20} />
+        </div>
+      )}
     </div>
   )
 }

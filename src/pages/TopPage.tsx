@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Icon } from '../components/common/Icon'
 import {
   DndContext,
   DragOverlay,
@@ -177,9 +177,11 @@ export default function TopPage() {
       {/* FAB（新規登録ボタン）— DndContextの外に配置（修正4） */}
       <button
         onClick={() => navigate('/app/new')}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full shadow-lg z-30 flex items-center justify-center"
+        onPointerUp={() => navigate('/app/new')}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full shadow-lg z-50 flex items-center justify-center"
+        style={{ touchAction: 'manipulation' }}
       >
-        <Plus size={28} />
+        <Icon name="add" size={28} />
       </button>
     </>
   )

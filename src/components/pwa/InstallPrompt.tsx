@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { Icon } from '../common/Icon';
 
 export function InstallPrompt() {
     const [showPrompt, setShowPrompt] = useState(false);
@@ -82,7 +82,7 @@ export function InstallPrompt() {
                     className="text-white/80 hover:text-white transition"
                     aria-label="閉じる"
                 >
-                    <X size={20} />
+                    <Icon name="close" size={20} />
                 </button>
             </div>
         </div>

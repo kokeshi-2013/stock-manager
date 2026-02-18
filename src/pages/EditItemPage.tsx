@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Star, Trash2 } from 'lucide-react'
+import { Icon } from '../components/common/Icon'
 import type { ConsumptionRate } from '../types/item'
 import { useItemStore } from '../store/itemStore'
 import { useUIStore } from '../store/uiStore'
@@ -98,7 +98,7 @@ export default function EditItemPage() {
       <header className="bg-white px-4 py-3 flex items-center justify-between border-b">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/app')} className="text-gray-500">
-            <ArrowLeft size={24} />
+            <Icon name="arrow_back" size={24} />
           </button>
           <h1 className="font-bold text-lg">編集</h1>
         </div>
@@ -106,7 +106,7 @@ export default function EditItemPage() {
           onClick={() => toggleStar(id)}
           className={item.isStarred ? 'text-yellow-400' : 'text-gray-300'}
         >
-          <Star size={24} fill={item.isStarred ? 'currentColor' : 'none'} />
+          <Icon name="star" size={24} filled={item.isStarred} />
         </button>
       </header>
 
@@ -204,7 +204,7 @@ export default function EditItemPage() {
           onClick={handleDelete}
           className="w-full py-3 bg-white border border-error text-error font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-error-light transition-colors"
         >
-          <Trash2 size={18} />
+          <Icon name="delete" size={18} />
           ゴミ箱に移動
         </button>
       </div>

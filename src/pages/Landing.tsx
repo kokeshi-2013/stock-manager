@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, RefreshCw, Zap, ShieldCheck } from 'lucide-react'
+import { Icon } from '../components/common/Icon'
 import { Modal } from '../components/common/Modal'
 
 function Landing() {
@@ -52,7 +52,7 @@ function Landing() {
             <div className="grid gap-8 md:grid-cols-2">
               <div className="flex gap-4 items-start">
                 <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Bell size={24} className="text-primary" />
+                  <Icon name="notifications" size={24} className="text-primary" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-1">そろそろお知らせ</h3>
@@ -64,7 +64,7 @@ function Landing() {
 
               <div className="flex gap-4 items-start">
                 <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center flex-shrink-0">
-                  <RefreshCw size={24} className="text-primary" />
+                  <Icon name="sync" size={24} className="text-primary" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-1">自動学習</h3>
@@ -76,7 +76,7 @@ function Landing() {
 
               <div className="flex gap-4 items-start">
                 <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Zap size={24} className="text-primary" />
+                  <Icon name="bolt" size={24} className="text-primary" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-1">かんたん登録</h3>
@@ -88,7 +88,7 @@ function Landing() {
 
               <div className="flex gap-4 items-start">
                 <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center flex-shrink-0">
-                  <ShieldCheck size={24} className="text-primary" />
+                  <Icon name="verified_user" size={24} className="text-primary" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-1">データはあなたの端末に</h3>

@@ -5,6 +5,7 @@ export interface TabConfig {
   label: string
   emptyMessage: string
   emptySubMessage?: string
+  isCompact?: boolean
 }
 
 export const TABS: TabConfig[] = [
@@ -13,6 +14,7 @@ export const TABS: TabConfig[] = [
     label: '★',
     emptyMessage: 'ピン留めしたものはありません',
     emptySubMessage: 'アイテムを長押しして★にドラッグするとピン留めできます',
+    isCompact: true,
   },
   {
     type: 'SOON',
@@ -22,21 +24,22 @@ export const TABS: TabConfig[] = [
   },
   {
     type: 'FUTURE',
-    label: '将来',
+    label: 'そのうち',
     emptyMessage: '近いうちに買い足すものはありません',
     emptySubMessage: '1〜3ヶ月以内に必要になるものがここに表示されます',
   },
   {
     type: 'STORAGE',
-    label: '倉庫',
+    label: 'いちおう',
     emptyMessage: 'ストックに余裕のあるものはありません',
     emptySubMessage: '4ヶ月以上先に必要になるものがここに表示されます',
   },
   {
     type: 'TRASH',
-    label: 'ゴミ箱',
+    label: '🗑️',
     emptyMessage: 'ゴミ箱は空です',
     emptySubMessage: '削除したアイテムは30日後に自動で完全削除されます',
+    isCompact: true,
   },
 ]
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { Icon } from '../components/common/Icon'
 import type { ConsumptionRate } from '../types/item'
 import { useItemStore } from '../store/itemStore'
 import { useUIStore } from '../store/uiStore'
@@ -75,7 +75,7 @@ export default function NewItemPage() {
       {/* ヘッダー */}
       <header className="bg-white px-4 py-3 flex items-center gap-3 border-b">
         <button onClick={() => navigate('/app')} className="text-gray-500">
-          <ArrowLeft size={24} />
+          <Icon name="arrow_back" size={24} />
         </button>
         <h1 className="font-bold text-lg">買いたすもの登録</h1>
       </header>

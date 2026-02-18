@@ -7,6 +7,7 @@ interface DroppableTabProps {
   count: number
   isActive: boolean
   isDragging: boolean
+  isCompact: boolean
   onClick: () => void
 }
 
@@ -16,6 +17,7 @@ export function DroppableTab({
   count,
   isActive,
   isDragging,
+  isCompact,
   onClick,
 }: DroppableTabProps) {
   const { isOver, setNodeRef } = useDroppable({
@@ -23,11 +25,15 @@ export function DroppableTab({
     data: { tab },
   })
 
+  const sizeClass = isCompact
+    ? 'px-3 min-w-[44px] justify-center'
+    : 'px-4 flex-1 justify-center'
+
   return (
     <button
       ref={setNodeRef}
       onClick={onClick}
-      className={`flex items-center gap-1 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+      className={`flex items-center gap-1 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${sizeClass} ${
         isOver && isDragging
           ? 'border-primary bg-primary-light text-primary scale-105'
           : isActive
@@ -36,7 +42,7 @@ export function DroppableTab({
       }`}
     >
       {label}
-      {count > 0 && (
+      {count > 0 && !isCompact && (
         <span
           className={`text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center ${
             isActive || (isOver && isDragging)

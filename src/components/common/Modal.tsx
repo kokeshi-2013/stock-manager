@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { Icon } from './Icon'
 
 interface ModalProps {
   isOpen: boolean
@@ -16,7 +16,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="font-bold text-lg">{title}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={24} />
+            <Icon name="close" size={24} />
           </button>
         </div>
         <div className="p-4 overflow-y-auto text-sm text-gray-700 leading-relaxed">
