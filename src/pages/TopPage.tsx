@@ -26,6 +26,7 @@ import type { TabType } from '../types/item'
 export default function TopPage() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const isScrollingByTabRef = useRef(false)
+  const isInitialRenderRef = useRef(true)
 
   // モーダル状態
   const [modalOpen, setModalOpen] = useState(false)
@@ -58,9 +59,11 @@ export default function TopPage() {
   useEffect(() => {
     if (scrollRef.current) {
       isScrollingByTabRef.current = true
+      const behavior = isInitialRenderRef.current ? 'instant' as const : 'smooth' as const
+      isInitialRenderRef.current = false
       scrollRef.current.scrollTo({
         left: tabIndex * scrollRef.current.clientWidth,
-        behavior: 'smooth',
+        behavior,
       })
       // scrollend イベントでフラグを解除（未対応ブラウザ向け600msフォールバック）
       const el = scrollRef.current
@@ -192,7 +195,6 @@ export default function TopPage() {
       {/* FAB（新規登録ボタン） */}
       <button
         onClick={handleOpenNew}
-        onPointerUp={handleOpenNew}
         className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full shadow-lg z-40 flex items-center justify-center"
         style={{ touchAction: 'manipulation' }}
       >

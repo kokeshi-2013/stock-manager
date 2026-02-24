@@ -180,7 +180,6 @@ export function ItemFormModal({ isOpen, onClose, editItemId }: ItemFormModalProp
                 onChange={(e) => setName(e.target.value)}
                 placeholder="商品名を入力"
                 className="flex-1 p-3 border rounded-xl text-sm bg-white"
-                autoFocus
               />
               <button
                 onClick={() => setShowScanner(true)}

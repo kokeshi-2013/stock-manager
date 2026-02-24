@@ -1,9 +1,11 @@
 import { useDroppable } from '@dnd-kit/core'
 import type { TabType } from '../../types/item'
+import { Icon } from './Icon'
 
 interface DroppableTabProps {
   tab: TabType
   label: string
+  icon?: string
   count: number
   isActive: boolean
   isDragging: boolean
@@ -14,6 +16,7 @@ interface DroppableTabProps {
 export function DroppableTab({
   tab,
   label,
+  icon,
   count,
   isActive,
   isDragging,
@@ -41,7 +44,7 @@ export function DroppableTab({
             : 'border-transparent text-gray-400 hover:text-gray-600'
       }`}
     >
-      {label}
+      {icon ? <Icon name={icon as 'keep'} size={20} filled={isActive} /> : label}
       {count > 0 && !isCompact && (
         <span
           className={`text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center ${

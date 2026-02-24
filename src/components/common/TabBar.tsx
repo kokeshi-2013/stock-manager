@@ -22,6 +22,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
           key={tab.type}
           tab={tab.type}
           label={tab.label}
+          icon={tab.icon}
           count={getCount(tab.type)}
           isActive={activeTab === tab.type}
           isDragging={!!draggingItemId}
