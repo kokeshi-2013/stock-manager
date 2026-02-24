@@ -19,6 +19,7 @@ type IconName =
   | 'content_copy'
   | 'logout'
   | 'link'
+  | 'keep'
 
 interface IconProps {
   name: IconName

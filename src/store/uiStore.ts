@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { TabType } from '../types/item'
 import { DEFAULT_TAB } from '../constants/tabs'
 
@@ -36,25 +37,33 @@ interface UIStore {
   setIsBarcodeSearching: (searching: boolean) => void
 }
 
-export const useUIStore = create<UIStore>()((set) => ({
-  activeTab: DEFAULT_TAB,
-  setActiveTab: (tab) => set({ activeTab: tab }),
+export const useUIStore = create<UIStore>()(
+  persist(
+    (set) => ({
+      activeTab: DEFAULT_TAB,
+      setActiveTab: (tab) => set({ activeTab: tab }),
 
-  searchQuery: '',
-  setSearchQuery: (query) => set({ searchQuery: query }),
+      searchQuery: '',
+      setSearchQuery: (query) => set({ searchQuery: query }),
 
-  filterPurchasePlace: null,
-  setFilterPurchasePlace: (place) => set({ filterPurchasePlace: place }),
+      filterPurchasePlace: null,
+      setFilterPurchasePlace: (place) => set({ filterPurchasePlace: place }),
 
-  snackbar: null,
-  showSnackbar: (message, action) => set({ snackbar: { message, action } }),
-  hideSnackbar: () => set({ snackbar: null }),
+      snackbar: null,
+      showSnackbar: (message, action) => set({ snackbar: { message, action } }),
+      hideSnackbar: () => set({ snackbar: null }),
 
-  draggingItemId: null,
-  setDraggingItemId: (id) => set({ draggingItemId: id }),
+      draggingItemId: null,
+      setDraggingItemId: (id) => set({ draggingItemId: id }),
 
-  isScannerOpen: false,
-  setIsScannerOpen: (open) => set({ isScannerOpen: open }),
-  isBarcodeSearching: false,
-  setIsBarcodeSearching: (searching) => set({ isBarcodeSearching: searching }),
-}))
+      isScannerOpen: false,
+      setIsScannerOpen: (open) => set({ isScannerOpen: open }),
+      isBarcodeSearching: false,
+      setIsBarcodeSearching: (searching) => set({ isBarcodeSearching: searching }),
+    }),
+    {
+      name: 'kaitas-ui',
+      partialize: (state) => ({ activeTab: state.activeTab }),
+    },
+  ),
+)
