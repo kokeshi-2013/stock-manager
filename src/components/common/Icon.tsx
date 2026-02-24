@@ -12,6 +12,13 @@ type IconName =
   | 'sync'
   | 'bolt'
   | 'verified_user'
+  | 'settings'
+  | 'group'
+  | 'cloud_done'
+  | 'cloud_off'
+  | 'content_copy'
+  | 'logout'
+  | 'link'
 
 interface IconProps {
   name: IconName

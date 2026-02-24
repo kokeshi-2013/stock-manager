@@ -2,6 +2,9 @@
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
     "framework": "vite",
+    "rewrites": [
+        { "source": "/((?!api/).*)", "destination": "/index.html" }
+    ],
     "functions": {
         "api/rakuten-search.js": {
             "memory": 128,
@@ -10,6 +13,16 @@
         "api/yahoo-search.js": {
             "memory": 128,
             "maxDuration": 10
+        },
+        "api/usage-alert.js": {
+            "memory": 128,
+            "maxDuration": 10
         }
-    }
+    },
+    "crons": [
+        {
+            "path": "/api/usage-alert",
+            "schedule": "0 * * * *"
+        }
+    ]
 }
