@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import type { Item } from '../../types/item'
 import { getSmartIcon } from '../../utils/smartIcon'
 import { Icon } from '../common/Icon'
@@ -8,6 +7,7 @@ import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 interface ItemCardProps {
   item: Item
   onCheck: (id: string) => void
+  onEdit?: (id: string) => void
   showCheckbox?: boolean
   isDragging?: boolean
   dragHandleListeners?: SyntheticListenerMap
@@ -16,11 +16,11 @@ interface ItemCardProps {
 export function ItemCard({
   item,
   onCheck,
+  onEdit,
   showCheckbox = true,
   isDragging = false,
   dragHandleListeners,
 }: ItemCardProps) {
-  const navigate = useNavigate()
   const [animState, setAnimState] = useState<'idle' | 'checked' | 'sliding'>('idle')
 
   const handleCheck = (e: React.MouseEvent) => {
@@ -50,7 +50,7 @@ export function ItemCard({
 
   return (
     <div
-      onClick={animState === 'idle' && !isDragging ? () => navigate(`/app/edit/${item.id}`) : undefined}
+      onClick={animState === 'idle' && !isDragging && onEdit ? () => onEdit(item.id) : undefined}
       className={cardClass}
     >
       {/* チェックボックス */}

@@ -1,5 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Icon } from '../components/common/Icon'
 import {
   DndContext,
@@ -20,13 +19,17 @@ import { SearchBar } from '../components/common/SearchBar'
 import { Snackbar } from '../components/common/Snackbar'
 import { ItemList } from '../components/item/ItemList'
 import { ItemCard } from '../components/item/ItemCard'
+import { ItemFormModal } from '../components/item/ItemFormModal'
 import { InstallPrompt } from '../components/pwa/InstallPrompt'
 import type { TabType } from '../types/item'
 
 export default function TopPage() {
-  const navigate = useNavigate()
   const scrollRef = useRef<HTMLDivElement>(null)
   const isScrollingByTabRef = useRef(false)
+
+  // モーダル状態
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editingItemId, setEditingItemId] = useState<string | null>(null)
 
   const checkMigration = useItemStore((s) => s.checkMigration)
   const recalculateAllTabs = useItemStore((s) => s.recalculateAllTabs)
@@ -95,6 +98,18 @@ export default function TopPage() {
     })
   }, [items, markAsBought, showSnackbar])
 
+  // アイテム編集モーダルを開く
+  const handleEditItem = useCallback((id: string) => {
+    setEditingItemId(id)
+    setModalOpen(true)
+  }, [])
+
+  // 新規登録モーダルを開く
+  const handleOpenNew = () => {
+    setEditingItemId(null)
+    setModalOpen(true)
+  }
+
   // ドラッグ&ドロップセンサー（ロングプレス500msで開始）
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: { delay: 500, tolerance: 5 },
@@ -155,7 +170,7 @@ export default function TopPage() {
           >
             {TABS.map((tab) => (
               <div key={tab.type} className="w-full flex-shrink-0 snap-center overflow-y-auto">
-                <ItemList tab={tab.type} onCheckItem={handleCheckItem} />
+                <ItemList tab={tab.type} onCheckItem={handleCheckItem} onEditItem={handleEditItem} />
               </div>
             ))}
           </div>
@@ -174,15 +189,22 @@ export default function TopPage() {
         </DragOverlay>
       </DndContext>
 
-      {/* FAB（新規登録ボタン）— DndContextの外に配置（修正4） */}
+      {/* FAB（新規登録ボタン） */}
       <button
-        onClick={() => navigate('/app/new')}
-        onPointerUp={() => navigate('/app/new')}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full shadow-lg z-50 flex items-center justify-center"
+        onClick={handleOpenNew}
+        onPointerUp={handleOpenNew}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-full shadow-lg z-40 flex items-center justify-center"
         style={{ touchAction: 'manipulation' }}
       >
         <Icon name="add" size={28} />
       </button>
+
+      {/* 新規登録・編集モーダル */}
+      <ItemFormModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        editItemId={editingItemId}
+      />
     </>
   )
 }

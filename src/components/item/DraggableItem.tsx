@@ -6,10 +6,11 @@ import { ItemCard } from './ItemCard'
 interface DraggableItemProps {
   item: Item
   onCheck: (id: string) => void
+  onEdit?: (id: string) => void
   showCheckbox?: boolean
 }
 
-export function DraggableItem({ item, onCheck, showCheckbox }: DraggableItemProps) {
+export function DraggableItem({ item, onCheck, onEdit, showCheckbox }: DraggableItemProps) {
   const {
     attributes,
     listeners,
@@ -34,6 +35,7 @@ export function DraggableItem({ item, onCheck, showCheckbox }: DraggableItemProp
       <ItemCard
         item={item}
         onCheck={onCheck}
+        onEdit={onEdit}
         showCheckbox={showCheckbox}
         isDragging={isDragging}
         dragHandleListeners={listeners}

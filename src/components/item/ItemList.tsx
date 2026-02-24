@@ -9,9 +9,10 @@ import { EmptyState } from '../common/EmptyState'
 interface ItemListProps {
   tab: TabType
   onCheckItem: (id: string) => void
+  onEditItem?: (id: string) => void
 }
 
-export function ItemList({ tab, onCheckItem }: ItemListProps) {
+export function ItemList({ tab, onCheckItem, onEditItem }: ItemListProps) {
   const items = useItemStore((s) => s.items)
   const searchQuery = useUIStore((s) => s.searchQuery)
   const filterPlace = useUIStore((s) => s.filterPurchasePlace)
@@ -54,6 +55,7 @@ export function ItemList({ tab, onCheckItem }: ItemListProps) {
             key={item.id}
             item={item}
             onCheck={onCheckItem}
+            onEdit={onEditItem}
             showCheckbox={showCheckbox}
           />
         ))}
