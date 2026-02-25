@@ -20,6 +20,8 @@ type IconName =
   | 'logout'
   | 'link'
   | 'keep'
+  | 'playlist_add'
+  | 'mic'
 
 interface IconProps {
   name: IconName

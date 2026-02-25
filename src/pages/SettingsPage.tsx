@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/common/Icon'
 import { SyncSettings } from '../components/settings/SyncSettings'
+import { VoiceShortcutGuide } from '../components/settings/VoiceShortcutGuide'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -21,6 +22,7 @@ export default function SettingsPage() {
       {/* 設定項目 */}
       <div className="p-4 space-y-4">
         <SyncSettings />
+        <VoiceShortcutGuide />
       </div>
     </div>
   )
