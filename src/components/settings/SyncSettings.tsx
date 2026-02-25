@@ -46,7 +46,7 @@ export function SyncSettings() {
     try {
       const user = await signInAnonymouslyIfNeeded()
       if (!user) {
-        setMessage('ログインに失敗しました')
+        setMessage('ログインに失敗しました。ネットワーク接続を確認してもう一度お試しください')
         return
       }
       setUserId(user.uid)
@@ -88,7 +88,7 @@ export function SyncSettings() {
     try {
       const user = await signInAnonymouslyIfNeeded()
       if (!user) {
-        setMessage('ログインに失敗しました')
+        setMessage('ログインに失敗しました。ネットワーク接続を確認してもう一度お試しください')
         return
       }
       setUserId(user.uid)
