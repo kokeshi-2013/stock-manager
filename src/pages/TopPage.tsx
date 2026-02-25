@@ -20,6 +20,7 @@ import { Snackbar } from '../components/common/Snackbar'
 import { ItemList } from '../components/item/ItemList'
 import { ItemCard } from '../components/item/ItemCard'
 import { ItemFormModal } from '../components/item/ItemFormModal'
+import { PendingItemsBanner } from '../components/common/PendingItemsBanner'
 import { InstallPrompt } from '../components/pwa/InstallPrompt'
 import type { TabType } from '../types/item'
 
@@ -52,6 +53,23 @@ export default function TopPage() {
     checkMigration()
     recalculateAllTabs()
     runTrashCleanup()
+  }, [])
+
+  // URLパラメータから「追加リクエスト」を待ちリストに保存
+  // Siri / Google アシスタントから ?add=商品名 でアクセスされた場合
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const addNames = params.getAll('add')
+    if (addNames.length > 0) {
+      const existing = JSON.parse(localStorage.getItem('kaitas-pending-items') || '[]')
+      const newItems = addNames.map(name => ({
+        name: name.trim(),
+        addedAt: new Date().toISOString(),
+      }))
+      localStorage.setItem('kaitas-pending-items', JSON.stringify([...existing, ...newItems]))
+      // URLをきれいにする（ブラウザ履歴を汚さない）
+      window.history.replaceState({}, '', '/app')
+    }
   }, [])
 
   // タブ切り替え時にスクロール（修正1: スクロール中フラグで handleScroll を制御）
@@ -162,6 +180,7 @@ export default function TopPage() {
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="min-h-screen bg-gray-50 flex flex-col">
           <Header />
+          <PendingItemsBanner />
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
           <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
