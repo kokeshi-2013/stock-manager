@@ -91,9 +91,9 @@ function Landing() {
                   <Icon name="verified_user" size={24} className="text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg mb-1">データはあなたの端末に</h3>
+                  <h3 className="font-bold text-lg mb-1">あなたのデータは安全</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">
-                    サーバーにデータを送りません。すべて端末内で保存されるので安心です。
+                    データは端末に保存されます。家族共有やアカウント連携を使う場合のみ、安全なクラウドに同期します。
                   </p>
                 </div>
               </div>
@@ -167,7 +167,7 @@ function Landing() {
           <h4 className="font-bold text-gray-800">第1条（サービス内容）</h4>
           <p>本サービスは、日用品の買い忘れ防止を目的としたリマインドツールです。ユーザーが登録した商品の消費サイクルに基づき、買い足し時期の目安を提供します。</p>
           <h4 className="font-bold text-gray-800">第2条（データの取り扱い）</h4>
-          <p>本サービスで入力されたデータは、すべてユーザーの端末（ブラウザのローカルストレージ）に保存されます。サーバーへのデータ送信は行いません。</p>
+          <p>本サービスで入力されたデータは、ユーザーの端末に保存されます。家族共有機能またはアカウント連携機能を利用した場合、データはFirebaseクラウドに同期されます。</p>
           <h4 className="font-bold text-gray-800">第3条（免責事項）</h4>
           <p>本サービスは現状有姿で提供されます。リマインドの正確性について保証するものではありません。端末やブラウザのデータ消去によるデータ損失について、当方は責任を負いません。</p>
           <h4 className="font-bold text-gray-800">第4条（禁止事項）</h4>
@@ -182,7 +182,7 @@ function Landing() {
         <div className="text-sm text-gray-600 space-y-4">
           <p>カイタス（以下「本サービス」）は、ユーザーのプライバシーを尊重し、以下の方針に基づき個人情報を取り扱います。</p>
           <h4 className="font-bold text-gray-800">1. 収集する情報</h4>
-          <p>本サービスはユーザーの個人情報を収集しません。登録されたデータ（商品名、購入場所、消費サイクル等）はすべてユーザーの端末内に保存され、外部サーバーには送信されません。</p>
+          <p>登録されたデータ（商品名、購入場所、消費サイクル等）は端末内に保存されます。家族共有機能を利用した場合、データはFirebaseに同期されます。アカウント連携時は、認証に必要な情報（メールアドレス、表示名）がFirebase Authenticationに保存されます。</p>
           <h4 className="font-bold text-gray-800">2. バーコード検索機能</h4>
           <p>バーコードスキャン時に、商品情報を取得するため外部API（Yahoo!ショッピングAPI、楽天商品検索API）にリクエストを送信します。この際、バーコード番号のみが送信され、個人情報は含まれません。</p>
           <h4 className="font-bold text-gray-800">3. Cookieについて</h4>

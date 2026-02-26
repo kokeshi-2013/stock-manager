@@ -22,6 +22,7 @@ type IconName =
   | 'keep'
   | 'playlist_add'
   | 'mic'
+  | 'person'
 
 interface IconProps {
   name: IconName

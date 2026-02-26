@@ -99,9 +99,9 @@ export function SyncSettings() {
         return
       }
 
-      const joined = await joinFamilyGroup(group.groupId, user.uid)
-      if (!joined) {
-        setMessage('グループへの参加に失敗しました')
+      const result = await joinFamilyGroup(group.groupId, user.uid)
+      if (!result.success) {
+        setMessage(result.error ?? 'グループへの参加に失敗しました')
         return
       }
 

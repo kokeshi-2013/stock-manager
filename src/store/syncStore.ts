@@ -3,13 +3,21 @@ import { persist } from 'zustand/middleware'
 
 type SyncMode = 'local' | 'shared'
 type SyncStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'saving'
+export type AuthProvider = 'anonymous' | 'google' | 'apple'
+
+interface AuthInfo {
+  authProvider: AuthProvider
+  displayName: string | null
+  email: string | null
+  photoURL: string | null
+}
 
 interface SyncStore {
   // 同期モード（ローカルのみ or 家族共有）
   mode: SyncMode
   // 接続状態
   status: SyncStatus
-  // ユーザーID（Firebase匿名認証のUID）
+  // ユーザーID（Firebase認証のUID）
   userId: string
   // 家族グループID
   familyGroupId: string | null
@@ -19,6 +27,13 @@ interface SyncStore {
   savingMode: boolean
   // エラーメッセージ
   errorMessage: string | null
+  // アカウント情報
+  authProvider: AuthProvider
+  displayName: string | null
+  email: string | null
+  photoURL: string | null
+  // アカウント連携中フラグ（一時的、保存しない）
+  isLinkingAccount: boolean
 
   // アクション
   setMode: (mode: SyncMode) => void
@@ -28,6 +43,9 @@ interface SyncStore {
   clearFamilyGroup: () => void
   setSavingMode: (saving: boolean) => void
   setError: (message: string | null) => void
+  setAuthInfo: (info: AuthInfo) => void
+  setIsLinkingAccount: (linking: boolean) => void
+  clearAuthInfo: () => void
 }
 
 export const useSyncStore = create<SyncStore>()(
@@ -40,6 +58,11 @@ export const useSyncStore = create<SyncStore>()(
       familyCode: null,
       savingMode: false,
       errorMessage: null,
+      authProvider: 'anonymous' as AuthProvider,
+      displayName: null,
+      email: null,
+      photoURL: null,
+      isLinkingAccount: false,
 
       setMode: (mode) => set({ mode }),
       setStatus: (status) => set({ status }),
@@ -50,6 +73,21 @@ export const useSyncStore = create<SyncStore>()(
         set({ familyGroupId: null, familyCode: null, mode: 'local', status: 'disconnected' }),
       setSavingMode: (saving) => set({ savingMode: saving }),
       setError: (message) => set({ errorMessage: message }),
+      setAuthInfo: (info) =>
+        set({
+          authProvider: info.authProvider,
+          displayName: info.displayName,
+          email: info.email,
+          photoURL: info.photoURL,
+        }),
+      setIsLinkingAccount: (linking) => set({ isLinkingAccount: linking }),
+      clearAuthInfo: () =>
+        set({
+          authProvider: 'anonymous',
+          displayName: null,
+          email: null,
+          photoURL: null,
+        }),
     }),
     {
       name: 'kaitas-sync',
@@ -58,6 +96,10 @@ export const useSyncStore = create<SyncStore>()(
         userId: state.userId,
         familyGroupId: state.familyGroupId,
         familyCode: state.familyCode,
+        authProvider: state.authProvider,
+        displayName: state.displayName,
+        email: state.email,
+        photoURL: state.photoURL,
       }),
     }
   )
