@@ -13,14 +13,6 @@ import { getFirebaseAuth } from '../lib/firebase'
 import type { AuthProvider } from '../store/syncStore'
 
 /**
- * モバイルデバイスかどうかを判定
- * モバイルでは signInWithRedirect を使う（popupがブロックされるため）
- */
-function isMobileDevice(): boolean {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-}
-
-/**
  * 匿名認証でログインする
  * すでにログイン済みの場合は何もしない
  * Firebase Auth の準備完了を待ち、失敗時は1回リトライする
@@ -119,8 +111,8 @@ export function getAuthProviderInfo(user: User): {
  * 匿名アカウントをGoogleアカウントに連携（昇格）する
  * 成功するとUIDはそのまま、Googleアカウントが紐づく → データがそのまま残る
  *
- * モバイル: linkWithRedirect（ページ遷移して戻ってくる）→ 結果は handleRedirectResult() で受け取る
- * PC: linkWithPopup（小窓が出る）→ 結果はこの関数の返り値で受け取る
+ * まず linkWithPopup（小窓方式）を試す（PC・モバイル共通）
+ * ポップアップがブロックされた場合のみ linkWithRedirect（ページ遷移方式）にフォールバック
  */
 export async function linkWithGoogle(): Promise<{
   success: boolean
@@ -138,19 +130,24 @@ export async function linkWithGoogle(): Promise<{
   const user = auth.currentUser
 
   try {
-    if (isMobileDevice()) {
-      // モバイル: リダイレクト方式（ページ遷移→戻り）
-      // 結果は handleRedirectResult() で受け取る
-      await linkWithRedirect(user, provider)
-      // この行は到達しない（ページが遷移するため）
-      return { success: true }
-    } else {
-      // PC: ポップアップ方式（小窓）
-      const result = await linkWithPopup(user, provider)
-      return { success: true, user: result.user }
-    }
+    // まずポップアップ方式を試す（PC・モバイル共通で最も確実）
+    const result = await linkWithPopup(user, provider)
+    return { success: true, user: result.user }
   } catch (error: unknown) {
     const authError = error as { code?: string; message?: string }
+
+    // ポップアップがブロックされた → リダイレクト方式にフォールバック
+    if (authError.code === 'auth/popup-blocked') {
+      console.log('[Auth] ポップアップブロック → リダイレクト方式にフォールバック')
+      try {
+        await linkWithRedirect(user, provider)
+        // この行は到達しない（ページが遷移するため）
+        return { success: true }
+      } catch (redirectError) {
+        console.error('[Auth] リダイレクト方式も失敗:', redirectError)
+        return { success: false, error: 'Googleログインに失敗しました。ブラウザのポップアップを許可してもう一度お試しください。' }
+      }
+    }
 
     if (authError.code === 'auth/credential-already-in-use') {
       // このGoogleアカウントは別のFirebaseユーザーに紐づいている
