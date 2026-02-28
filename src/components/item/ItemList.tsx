@@ -1,6 +1,7 @@
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { TabType } from '../../types/item'
 import { useItemStore } from '../../store/itemStore'
+import { useListStore } from '../../store/listStore'
 import { useUIStore } from '../../store/uiStore'
 import { TABS } from '../../constants/tabs'
 import { DraggableItem } from './DraggableItem'
@@ -14,13 +15,22 @@ interface ItemListProps {
 
 export function ItemList({ tab, onCheckItem, onEditItem }: ItemListProps) {
   const items = useItemStore((s) => s.items)
+  const activeListId = useListStore((s) => s.activeListId)
   const searchQuery = useUIStore((s) => s.searchQuery)
   const filterPlace = useUIStore((s) => s.filterPurchasePlace)
 
   const tabConfig = TABS.find((t) => t.type === tab)
 
-  // フィルタリング
-  let filtered = items.filter((item) => item.currentTab === tab)
+  // フィルタリング: タブ + アクティブリスト
+  let filtered = items.filter((item) => {
+    if (item.currentTab !== tab) return false
+    // activeListIdがある場合はリストでフィルタ
+    if (activeListId && item.listId) {
+      return item.listId === activeListId
+    }
+    // listIdがないアイテム（v2からの移行前）は全て表示
+    return true
+  })
 
   if (searchQuery) {
     const q = searchQuery.toLowerCase()

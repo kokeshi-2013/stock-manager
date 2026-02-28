@@ -8,8 +8,20 @@ export interface CheckEntry {
 
 export interface Item {
   id: string
-  userId: string
-  familyGroupId: string | null
+  /** どのリストに属するか（v3で追加） */
+  listId: string
+  /** 誰が追加したか（v3で追加、旧userIdの代替） */
+  addedBy: string
+  /**
+   * @deprecated v3でlistIdに移行。互換性のために残す。
+   * マイグレーション完了後にPhase Gで削除。
+   */
+  userId?: string
+  /**
+   * @deprecated v3でlistIdに移行。互換性のために残す。
+   * マイグレーション完了後にPhase Gで削除。
+   */
+  familyGroupId?: string | null
   name: string
   imageUrl: string | null
   barcode: string | null

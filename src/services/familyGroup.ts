@@ -85,10 +85,11 @@ export async function findGroupByCode(code: string): Promise<{ groupId: string; 
 
 /**
  * グループにメンバーを追加する
+ * 失敗時はエラーメッセージを返す
  */
-export async function joinFamilyGroup(groupId: string, userId: string): Promise<boolean> {
+export async function joinFamilyGroup(groupId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   const db = getDB()
-  if (!db) return false
+  if (!db) return { success: false, error: 'データベースに接続できません' }
 
   try {
     const groupRef = doc(db, 'familyGroups', groupId)
@@ -98,7 +99,7 @@ export async function joinFamilyGroup(groupId: string, userId: string): Promise<
 
     if (!groupSnap.exists()) {
       console.error('[FamilyGroup] グループが見つかりません:', groupId)
-      return false
+      return { success: false, error: 'グループが見つかりません' }
     }
 
     await updateDoc(groupRef, {
@@ -107,10 +108,14 @@ export async function joinFamilyGroup(groupId: string, userId: string): Promise<
 
     usageMonitor.countWrite()
     console.log('[FamilyGroup] グループ参加完了:', groupId)
-    return true
-  } catch (error) {
+    return { success: true }
+  } catch (error: unknown) {
     console.error('[FamilyGroup] グループ参加エラー:', error)
-    return false
+    const err = error as { code?: string; message?: string }
+    if (err.code === 'permission-denied') {
+      return { success: false, error: 'アクセス権限がありません。Firestoreのセキュリティルールをデプロイしてください。' }
+    }
+    return { success: false, error: err.message ?? 'グループへの参加に失敗しました' }
   }
 }
 

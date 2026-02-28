@@ -7,6 +7,7 @@ import { loadAndMigrateV1Data } from '../services/migration'
 import { getInitialTab } from '../constants/consumptionRate'
 import { syncItemToFirestore, deleteItemFromFirestore } from '../services/sync'
 import { useSyncStore } from './syncStore'
+import { useListStore } from './listStore'
 
 interface ItemStore {
   items: Item[]
@@ -43,7 +44,17 @@ interface ItemStore {
 
   // ヘルパー
   getItemsByTab: (tab: TabType) => Item[]
+  /** アクティブリストのアイテムだけをタブでフィルタ */
+  getItemsByTabAndList: (tab: TabType, listId: string) => Item[]
+  /** リストのアイテム数を取得（ゴミ箱を除く） */
+  getItemCountByList: (listId: string) => number
   getPurchasePlaces: () => string[]
+
+  // v3マイグレーション用
+  /** アイテムを一括更新（マイグレーション時に使用） */
+  bulkUpdateItems: (items: Item[]) => void
+  /** リストのアイテムを全削除 */
+  deleteItemsByList: (listId: string) => void
 }
 
 export const useItemStore = create<ItemStore>()(
@@ -68,10 +79,15 @@ export const useItemStore = create<ItemStore>()(
       addItem: (data) => {
         const now = new Date().toISOString()
         const syncState = useSyncStore.getState()
+        const listState = useListStore.getState()
+        const activeListId = listState.activeListId ?? listState.ensureDefaultList()
         const item: Item = {
           id: crypto.randomUUID(),
+          listId: activeListId,
+          addedBy: syncState.userId,
+          // 後方互換
           userId: syncState.userId,
-          familyGroupId: syncState.familyGroupId,
+          familyGroupId: null,
           name: data.name,
           imageUrl: data.imageUrl ?? null,
           barcode: data.barcode ?? null,
@@ -245,11 +261,33 @@ export const useItemStore = create<ItemStore>()(
         return get().items.filter((item) => item.currentTab === tab)
       },
 
+      getItemsByTabAndList: (tab, listId) => {
+        return get().items.filter(
+          (item) => item.currentTab === tab && item.listId === listId
+        )
+      },
+
+      getItemCountByList: (listId) => {
+        return get().items.filter(
+          (item) => item.listId === listId && item.currentTab !== 'TRASH'
+        ).length
+      },
+
       getPurchasePlaces: () => {
         const places = get()
           .items.map((item) => item.purchasePlace)
           .filter((p): p is string => !!p)
         return [...new Set(places)]
+      },
+
+      bulkUpdateItems: (items) => {
+        set({ items })
+      },
+
+      deleteItemsByList: (listId) => {
+        set((state) => ({
+          items: state.items.filter((item) => item.listId !== listId),
+        }))
       },
     }),
     {

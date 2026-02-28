@@ -6,11 +6,11 @@ import { useSyncStore } from '../../store/syncStore'
  * ヘッダー右側に表示
  */
 export function SyncStatusBadge() {
-  const mode = useSyncStore((s) => s.mode)
+  const authProvider = useSyncStore((s) => s.authProvider)
   const status = useSyncStore((s) => s.status)
 
-  // ローカルモードの場合は何も表示しない
-  if (mode === 'local') return null
+  // 匿名ユーザーの場合は何も表示しない（ローカルモード）
+  if (authProvider === 'anonymous') return null
 
   const statusConfig = {
     connected: { icon: 'cloud_done' as const, color: 'text-green-500', label: '同期中' },
