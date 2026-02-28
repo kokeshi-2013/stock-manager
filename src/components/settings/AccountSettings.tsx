@@ -2,13 +2,16 @@ import { useState, useEffect, useCallback } from 'react'
 import { Icon } from '../common/Icon'
 import { isFirebaseConfigured } from '../../lib/firebase'
 import { useSyncStore } from '../../store/syncStore'
+import { useListStore } from '../../store/listStore'
+import { useItemStore } from '../../store/itemStore'
 import {
   linkWithGoogle,
   signOutAndRevertToAnonymous,
   signInWithExistingGoogle,
   getAuthProviderInfo,
 } from '../../services/authService'
-import { stopRealtimeSync } from '../../services/sync'
+import { stopRealtimeSync, startRealtimeSync, uploadAllItems } from '../../services/sync'
+import { uploadAllLists, fetchListsForUser } from '../../services/listService'
 
 /**
  * Google公式ロゴ（4色のG）
@@ -24,6 +27,37 @@ function GoogleLogo() {
   )
 }
 
+/**
+ * Googleログイン成功後のクラウド同期処理
+ */
+async function syncAfterGoogleLogin(uid: string): Promise<void> {
+  try {
+    // ローカルリストのownerUidを更新
+    const localLists = useListStore.getState().lists
+    for (const list of localLists) {
+      if (list.ownerUid !== uid) {
+        useListStore.getState().updateOwnerUid(list.ownerUid, uid)
+      }
+    }
+
+    // ローカルリストをFirestoreにアップロード
+    const updatedLists = useListStore.getState().lists
+    await uploadAllLists(updatedLists)
+    await uploadAllItems()
+
+    // クラウドのリストを取得してマージ
+    const cloudLists = await fetchListsForUser(uid)
+    if (cloudLists.length > 0) {
+      useListStore.getState().mergeListsFromCloud(cloudLists)
+    }
+
+    // 全リストのリアルタイム同期開始
+    startRealtimeSync()
+  } catch (error) {
+    console.error('[AccountSettings] クラウド同期エラー:', error)
+  }
+}
+
 export function AccountSettings() {
   const authProvider = useSyncStore((s) => s.authProvider)
   const displayName = useSyncStore((s) => s.displayName)
@@ -33,7 +67,7 @@ export function AccountSettings() {
 
   const [message, setMessage] = useState<string | null>(null)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
-  const [showMigrationDialog, setShowMigrationDialog] = useState(false)
+  const [showMergeDialog, setShowMergeDialog] = useState(false)
   const [pendingCredential, setPendingCredential] = useState<Parameters<typeof signInWithExistingGoogle>[0] | null>(null)
 
   // リダイレクト認証エラーをチェック（モバイルでGoogleログイン後に戻ってきた場合）
@@ -54,10 +88,14 @@ export function AccountSettings() {
     const result = await linkWithGoogle()
 
     if (result.success && result.user) {
-      // ポップアップ方式で成功（PC）
+      // ポップアップ方式で成功
       const authInfo = getAuthProviderInfo(result.user)
       useSyncStore.getState().setAuthInfo(authInfo)
       useSyncStore.getState().setUserId(result.user.uid)
+
+      // クラウド同期開始
+      await syncAfterGoogleLogin(result.user.uid)
+
       setMessage('Googleアカウントを連携しました')
       setMessageType('success')
       useSyncStore.getState().setIsLinkingAccount(false)
@@ -65,9 +103,9 @@ export function AccountSettings() {
       // リダイレクト方式が始まった（モバイル）→ ページ遷移中なので何もしない
       return
     } else if (result.errorCode === 'auth/credential-already-in-use' && result.existingCredential) {
-      // このGoogleアカウントは別のユーザーに紐づいている → 確認ダイアログ
+      // このGoogleアカウントは別のユーザーに紐づいている → マージダイアログ
       setPendingCredential(result.existingCredential)
-      setShowMigrationDialog(true)
+      setShowMergeDialog(true)
       useSyncStore.getState().setIsLinkingAccount(false)
     } else {
       // その他のエラー
@@ -77,45 +115,70 @@ export function AccountSettings() {
     }
   }, [])
 
-  // 「既存データを使う」を選択（credential-already-in-use の解決）
-  const handleMigrateToExisting = useCallback(async () => {
+  // 「両方のデータを残す」を選択（credential-already-in-use の解決）
+  const handleMergeData = useCallback(async () => {
     if (!pendingCredential) return
 
     useSyncStore.getState().setIsLinkingAccount(true)
 
+    // ① ローカルのアイテムとリストを保存
+    const localItems = [...useItemStore.getState().items]
+    const localLists = [...useListStore.getState().lists]
+    const deviceId = useListStore.getState().deviceId
+
+    // ② 既存のGoogleアカウントでログイン（UIDが変わる）
     const user = await signInWithExistingGoogle(pendingCredential)
-    if (user) {
-      const authInfo = getAuthProviderInfo(user)
-      useSyncStore.getState().setAuthInfo(authInfo)
-      useSyncStore.getState().setUserId(user.uid)
-
-      // 家族共有をリセット（UIDが変わったため）
-      stopRealtimeSync()
-      useSyncStore.getState().clearFamilyGroup()
-
-      setMessage('既存のアカウントでログインしました')
-      setMessageType('success')
-    } else {
+    if (!user) {
       setMessage('ログインに失敗しました')
       setMessageType('error')
+      useSyncStore.getState().setIsLinkingAccount(false)
+      setShowMergeDialog(false)
+      setPendingCredential(null)
+      return
     }
 
-    setShowMigrationDialog(false)
+    const newUid = user.uid
+    const authInfo = getAuthProviderInfo(user)
+    useSyncStore.getState().setAuthInfo(authInfo)
+    useSyncStore.getState().setUserId(newUid)
+
+    // ③ ローカルリストのUIDを新しいUIDに更新
+    for (const list of localLists) {
+      const updatedList = {
+        ...list,
+        ownerUid: newUid,
+        memberUids: list.memberUids.map((uid) => uid === list.ownerUid ? newUid : uid),
+        name: list.name === 'マイリスト' ? `${deviceId}のリスト` : list.name,
+        updatedAt: new Date().toISOString(),
+      }
+      useListStore.getState().updateListFromCloud(updatedList)
+    }
+
+    // ④ ローカルアイテムのaddedByを更新
+    const updatedItems = localItems.map((item) => ({
+      ...item,
+      addedBy: newUid,
+    }))
+    useItemStore.getState().bulkUpdateItems(updatedItems)
+
+    // ⑤ クラウド同期（ローカルデータをアップロード＆クラウドデータをダウンロード）
+    await syncAfterGoogleLogin(newUid)
+
+    setMessage('両方のデータを統合しました')
+    setMessageType('success')
+    setShowMergeDialog(false)
     setPendingCredential(null)
     useSyncStore.getState().setIsLinkingAccount(false)
   }, [pendingCredential])
 
   // ログアウト
   const handleSignOut = useCallback(async () => {
+    stopRealtimeSync()
+
     const user = await signOutAndRevertToAnonymous()
     if (user) {
       useSyncStore.getState().clearAuthInfo()
       useSyncStore.getState().setUserId(user.uid)
-
-      // 家族共有をリセット（新しいUIDになるため）
-      stopRealtimeSync()
-      useSyncStore.getState().clearFamilyGroup()
-
       setMessage('ログアウトしました')
       setMessageType('success')
     }
@@ -223,26 +286,30 @@ export function AccountSettings() {
         </p>
       )}
 
-      {/* credential-already-in-use 確認ダイアログ */}
-      {showMigrationDialog && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
-          <p className="text-sm font-medium text-amber-800">
-            このGoogleアカウントは別の端末で使われています
+      {/* データマージダイアログ（credential-already-in-use） */}
+      {showMergeDialog && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+          <p className="text-sm font-medium text-blue-800">
+            別のデバイスのデータが見つかりました
           </p>
-          <p className="text-xs text-amber-700">
-            「既存データを使う」を選ぶと、そちらのデータに切り替わります。今この端末にあるデータは使えなくなります。
+          <p className="text-xs text-blue-700">
+            このGoogleアカウントは別のデバイスでも使われています。
+            「両方のデータを残す」を選ぶと、どちらのデータも失われません。
           </p>
           <div className="flex gap-2">
             <button
-              onClick={handleMigrateToExisting}
+              onClick={handleMergeData}
               disabled={isLinkingAccount}
-              className="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+              className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
             >
-              既存データを使う
+              {isLinkingAccount ? (
+                <Icon name="sync" size={16} className="animate-spin inline mr-1" />
+              ) : null}
+              両方のデータを残す
             </button>
             <button
               onClick={() => {
-                setShowMigrationDialog(false)
+                setShowMergeDialog(false)
                 setPendingCredential(null)
               }}
               className="flex-1 py-2 bg-white border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"

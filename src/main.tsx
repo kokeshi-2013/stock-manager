@@ -8,7 +8,31 @@ import SettingsPage from './pages/SettingsPage'
 import { initializeFirebase } from './lib/firebase'
 import { handleRedirectResult, signInAnonymouslyIfNeeded, getAuthProviderInfo } from './services/authService'
 import { useSyncStore } from './store/syncStore'
-import { startRealtimeSync } from './services/sync'
+import { useListStore } from './store/listStore'
+import { useItemStore } from './store/itemStore'
+import { startRealtimeSync, uploadAllItems } from './services/sync'
+import { uploadAllLists, fetchListsForUser } from './services/listService'
+import { migrateV2ToV3, cleanupV2Backup } from './services/migration'
+
+// v2→v3マイグレーション（リスト対応）
+const migrationResult = migrateV2ToV3()
+if (migrationResult) {
+  const { updatedItems, newLists } = migrationResult
+  // アイテムストアを更新
+  useItemStore.getState().bulkUpdateItems(updatedItems)
+  // リストストアにリストを追加
+  useListStore.getState().mergeListsFromCloud(newLists)
+  // 最初のリストをアクティブに
+  if (newLists.length > 0) {
+    useListStore.getState().setActiveListId(newLists[0].id)
+  }
+}
+
+// デフォルトリストの確保（初回起動時 or マイグレーション後）
+useListStore.getState().ensureDefaultList()
+
+// 古いバックアップの掃除（30日経過後）
+cleanupV2Backup()
 
 // Firebase初期化（環境変数が設定されている場合のみ）
 const firebase = initializeFirebase()
@@ -39,9 +63,25 @@ if (firebase) {
       useSyncStore.getState().setUserId(user.uid)
       useSyncStore.getState().setAuthInfo(authInfo)
 
-      const { mode, familyGroupId } = useSyncStore.getState()
-      if (mode === 'shared' && familyGroupId) {
-        startRealtimeSync()
+      // Googleログイン済みならクラウド同期
+      if (authInfo.authProvider === 'google') {
+        try {
+          // ローカルリストをFirestoreにアップロード
+          const localLists = useListStore.getState().lists
+          await uploadAllLists(localLists)
+          await uploadAllItems()
+
+          // クラウドのリストを取得してマージ（他端末のリストを含む）
+          const cloudLists = await fetchListsForUser(user.uid)
+          if (cloudLists.length > 0) {
+            useListStore.getState().mergeListsFromCloud(cloudLists)
+          }
+
+          // 全リストのリアルタイム同期開始
+          startRealtimeSync()
+        } catch (error) {
+          console.error('[Main] クラウド同期の初期化エラー:', error)
+        }
       }
     }
   })

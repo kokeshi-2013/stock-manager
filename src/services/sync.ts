@@ -9,18 +9,21 @@ import {
 } from 'firebase/firestore'
 import { getDB } from '../lib/firebase'
 import { useSyncStore } from '../store/syncStore'
+import { useListStore } from '../store/listStore'
 import { useItemStore } from '../store/itemStore'
 import { usageMonitor } from './usageMonitor'
 import type { Item } from '../types/item'
 
-let unsubscribeSnapshot: Unsubscribe | null = null
+// リストごとのリスナー管理
+const listListeners: Map<string, Unsubscribe> = new Map()
 
 /**
  * Item → Firestoreドキュメント変換
  */
 function itemToDoc(item: Item): Record<string, unknown> {
   return {
-    userId: item.userId,
+    listId: item.listId,
+    addedBy: item.addedBy,
     name: item.name,
     imageUrl: item.imageUrl,
     barcode: item.barcode,
@@ -40,11 +43,11 @@ function itemToDoc(item: Item): Record<string, unknown> {
 /**
  * Firestoreドキュメント → Item変換
  */
-function docToItem(id: string, data: Record<string, unknown>, familyGroupId: string): Item {
+function docToItem(id: string, data: Record<string, unknown>, listId: string): Item {
   return {
     id,
-    userId: (data.userId as string) ?? 'unknown',
-    familyGroupId,
+    listId: (data.listId as string) ?? listId,
+    addedBy: (data.addedBy as string) ?? (data.userId as string) ?? 'unknown',
     name: (data.name as string) ?? '',
     imageUrl: (data.imageUrl as string | null) ?? null,
     barcode: (data.barcode as string | null) ?? null,
@@ -63,21 +66,26 @@ function docToItem(id: string, data: Record<string, unknown>, familyGroupId: str
 
 /**
  * Firestoreにアイテムを書き込む（1件）
+ * Googleログイン時のみ書き込む
  */
 export async function syncItemToFirestore(item: Item): Promise<void> {
   const db = getDB()
-  const { familyGroupId, mode, savingMode } = useSyncStore.getState()
+  const { savingMode, authProvider } = useSyncStore.getState()
 
-  if (!db || mode !== 'shared' || !familyGroupId) return
+  // Googleログインしていない場合はスキップ
+  if (!db || authProvider === 'anonymous') return
 
-  // 節約モード中はスキップ（ローカルにだけ保存）
+  // 節約モード中はスキップ
   if (savingMode) {
     console.log('[Sync] 節約モード中 - Firestore書き込みスキップ')
     return
   }
 
+  // listIdが必要
+  if (!item.listId) return
+
   try {
-    const itemRef = doc(db, 'familyGroups', familyGroupId, 'items', item.id)
+    const itemRef = doc(db, 'lists', item.listId, 'items', item.id)
     await setDoc(itemRef, itemToDoc(item))
     usageMonitor.countWrite()
   } catch (error: unknown) {
@@ -97,12 +105,16 @@ export async function syncItemToFirestore(item: Item): Promise<void> {
  */
 export async function deleteItemFromFirestore(itemId: string): Promise<void> {
   const db = getDB()
-  const { familyGroupId, mode, savingMode } = useSyncStore.getState()
+  const { savingMode, authProvider } = useSyncStore.getState()
 
-  if (!db || mode !== 'shared' || !familyGroupId || savingMode) return
+  if (!db || authProvider === 'anonymous' || savingMode) return
+
+  // アイテムのlistIdを取得
+  const item = useItemStore.getState().items.find((i) => i.id === itemId)
+  if (!item?.listId) return
 
   try {
-    await deleteDoc(doc(db, 'familyGroups', familyGroupId, 'items', itemId))
+    await deleteDoc(doc(db, 'lists', item.listId, 'items', itemId))
     usageMonitor.countWrite()
   } catch (error) {
     console.error('[Sync] 削除エラー:', error)
@@ -110,97 +122,125 @@ export async function deleteItemFromFirestore(itemId: string): Promise<void> {
 }
 
 /**
- * ローカルの全アイテムをFirestoreにアップロード（共有開始時）
+ * 特定リストのアイテムをFirestoreにアップロード
  */
-export async function uploadAllItems(): Promise<void> {
+export async function uploadItemsForList(listId: string): Promise<void> {
   const db = getDB()
-  const { familyGroupId } = useSyncStore.getState()
+  if (!db) return
 
-  if (!db || !familyGroupId) return
-
-  const items = useItemStore.getState().items
-  const userId = useSyncStore.getState().userId
-
-  console.log(`[Sync] ${items.length}件のアイテムをアップロード中...`)
+  const items = useItemStore.getState().items.filter((item) => item.listId === listId)
+  console.log(`[Sync] リスト${listId}の${items.length}件をアップロード中...`)
 
   for (const item of items) {
     try {
-      const updatedItem = { ...item, userId, familyGroupId }
-      const itemRef = doc(db, 'familyGroups', familyGroupId, 'items', item.id)
-      await setDoc(itemRef, itemToDoc(updatedItem))
+      const itemRef = doc(db, 'lists', listId, 'items', item.id)
+      await setDoc(itemRef, itemToDoc(item))
       usageMonitor.countWrite()
     } catch (error) {
       console.error('[Sync] アップロードエラー:', item.name, error)
     }
   }
-
-  console.log('[Sync] アップロード完了')
 }
 
 /**
- * Firestoreのリアルタイム同期を開始する
- * onSnapshotで変更をリアルタイムに受信してZustandに反映
+ * 全リストのアイテムをFirestoreにアップロード
  */
-export function startRealtimeSync(): void {
+export async function uploadAllItems(): Promise<void> {
+  const lists = useListStore.getState().lists
+  for (const list of lists) {
+    await uploadItemsForList(list.id)
+  }
+  console.log('[Sync] 全アイテムアップロード完了')
+}
+
+/**
+ * 特定リストのリアルタイム同期を開始する
+ */
+export function startListSync(listId: string): void {
   const db = getDB()
-  const { familyGroupId, mode } = useSyncStore.getState()
+  if (!db) return
 
-  if (!db || mode !== 'shared' || !familyGroupId) return
+  // 既にリスナーがあれば解除
+  const existing = listListeners.get(listId)
+  if (existing) {
+    existing()
+    listListeners.delete(listId)
+  }
 
-  // 既存のリスナーを解除
-  stopRealtimeSync()
-
-  useSyncStore.getState().setStatus('connecting')
-
-  const itemsRef = collection(db, 'familyGroups', familyGroupId, 'items')
+  const itemsRef = collection(db, 'lists', listId, 'items')
   const q = query(itemsRef)
 
-  unsubscribeSnapshot = onSnapshot(
+  const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
       useSyncStore.getState().setStatus('connected')
       useSyncStore.getState().setError(null)
 
-      // ドキュメント数をカウント（初回は全件、以降は変更分のみ）
       const changedDocs = snapshot.docChanges()
       if (changedDocs.length > 0) {
         usageMonitor.countRead(changedDocs.length)
       }
 
-      // Firestoreのデータで itemStore を更新
-      const firestoreItems: Item[] = snapshot.docs.map((doc) =>
-        docToItem(doc.id, doc.data() as Record<string, unknown>, familyGroupId)
+      // Firestoreのデータ
+      const firestoreItems: Item[] = snapshot.docs.map((d) =>
+        docToItem(d.id, d.data() as Record<string, unknown>, listId)
       )
 
-      // ローカルのみのアイテム（familyGroupIdがないもの）は保持
-      const localOnlyItems = useItemStore.getState().items.filter(
-        (item) => !item.familyGroupId || item.familyGroupId !== familyGroupId
+      // 現在のアイテムから、このリスト以外のアイテムを保持
+      const otherItems = useItemStore.getState().items.filter(
+        (item) => item.listId !== listId
       )
 
-      // マージ：ローカルのみ + Firestoreのアイテム
-      const mergedItems = [...localOnlyItems, ...firestoreItems]
-
-      // Zustandを直接更新（コンフリクト解決: 最後に更新した方が勝つ）
+      // マージ：他のリストのアイテム + Firestoreのアイテム
+      const mergedItems = [...otherItems, ...firestoreItems]
       useItemStore.setState({ items: mergedItems })
     },
     (error) => {
-      console.error('[Sync] リアルタイム同期エラー:', error)
+      console.error(`[Sync] リスト${listId}の同期エラー:`, error)
       useSyncStore.getState().setStatus('error')
       useSyncStore.getState().setError('同期接続にエラーが発生しました')
     }
   )
 
-  console.log('[Sync] リアルタイム同期開始')
+  listListeners.set(listId, unsubscribe)
+  console.log(`[Sync] リスト${listId}のリアルタイム同期開始`)
 }
 
 /**
- * リアルタイム同期を停止する
+ * 全リストのリアルタイム同期を開始する
+ */
+export function startRealtimeSync(): void {
+  const lists = useListStore.getState().lists
+  useSyncStore.getState().setStatus('connecting')
+
+  for (const list of lists) {
+    startListSync(list.id)
+  }
+
+  console.log(`[Sync] ${lists.length}個のリストのリアルタイム同期開始`)
+}
+
+/**
+ * 特定リストのリアルタイム同期を停止する
+ */
+export function stopListSync(listId: string): void {
+  const unsubscribe = listListeners.get(listId)
+  if (unsubscribe) {
+    unsubscribe()
+    listListeners.delete(listId)
+    console.log(`[Sync] リスト${listId}の同期停止`)
+  }
+}
+
+/**
+ * 全リストのリアルタイム同期を停止する
  */
 export function stopRealtimeSync(): void {
-  if (unsubscribeSnapshot) {
-    unsubscribeSnapshot()
-    unsubscribeSnapshot = null
-    useSyncStore.getState().setStatus('disconnected')
-    console.log('[Sync] リアルタイム同期停止')
+  for (const [listId, unsubscribe] of listListeners) {
+    unsubscribe()
+    console.log(`[Sync] リスト${listId}の同期停止`)
   }
+  listListeners.clear()
+  useSyncStore.getState().setStatus('disconnected')
+  console.log('[Sync] 全リアルタイム同期停止')
 }
